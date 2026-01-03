@@ -12,6 +12,9 @@
 .swiftpm/
 migrate_working_dir/
 test/
+pubspec.lock
+analysis_options.yaml
+.metadata
 
 # IntelliJ related
 *.iml
