@@ -2,7 +2,10 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-export 'TextStyles.dart';
+export 'text_styles.dart';
+export '../extensions/extensions.dart';
+export 'app_color.dart';
+export 'theme_manager.dart';
 
 abstract final class AppTheme {
   // The FlexColorScheme defined light mode ThemeData.
