@@ -33,6 +33,10 @@ class _ThemeManagerState extends State<ThemeManager> {
         systemNavigationBarIconBrightness: Theme.of(context).brightness == Brightness.dark
             ? Brightness.light
             : Brightness.dark,
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Theme.of(context).brightness == Brightness.dark
+            ? Brightness.light
+            : Brightness.dark,
       ),
       child: const DashboardView(),
     );
@@ -50,6 +54,10 @@ class _ThemeManagerState extends State<ThemeManager> {
         systemNavigationBarColor: scaffoldBackgroundColor,
         systemNavigationBarDividerColor: Colors.transparent,
         systemNavigationBarIconBrightness: brightness == Brightness.dark
+            ? Brightness.light
+            : Brightness.dark,
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: brightness == Brightness.dark
             ? Brightness.light
             : Brightness.dark,
       ),
