@@ -32,8 +32,10 @@ class DashboardView extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: AppColor.card,
+                    border: Border.all(color: AppColor.divider, width: .5),
                   ),
-                  child: ,
+                  alignment: .center,
+                  child: "bell".toSvgIcon(),
                 )
               ],
             ),
