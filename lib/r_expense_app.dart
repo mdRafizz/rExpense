@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:r_expense/core/theme/app_theme.dart';
 
 class RExpenseApp extends StatelessWidget {

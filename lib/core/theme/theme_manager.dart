@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:r_expense/core/theme/app_theme.dart';
 import 'package:r_expense/features/dashboard/presentation/dashboard_view.dart';
 
-/// A widget that updates the system UI overlay (status bar and navigation bar) 
-/// colors based on the current theme and rebuilds when the theme changes.
 class ThemeManager extends StatefulWidget {
   const ThemeManager({super.key});
 

@@ -4,9 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 import 'package:r_expense/core/extensions/context_extension.dart';
 import 'package:r_expense/core/extensions/extensions.dart';
-import 'package:r_expense/core/theme/app_color.dart';
-import 'package:r_expense/core/utils/logger.dart';
-import 'package:r_expense/features/auth/presentation/login_screen.dart';
 import 'package:r_expense/features/income/presentation/add_income_view.dart';
 
 class DashboardView extends StatelessWidget {

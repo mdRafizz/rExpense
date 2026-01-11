@@ -1,5 +1,3 @@
-import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 export 'text_styles.dart';
@@ -7,7 +5,6 @@ export '../extensions/extensions.dart';
 export 'app_color.dart';
 export 'theme_manager.dart';
 
-import 'package:flutter/material.dart';
 import 'package:r_expense/core/theme/app_color.dart';
 
 class AppTheme {
