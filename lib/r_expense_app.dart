@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:r_expense/core/theme/app_theme.dart';
 
+import 'features/dashboard/presentation/dashboard_view.dart';
+
 class RExpenseApp extends StatelessWidget {
   const RExpenseApp({super.key});
 
@@ -11,8 +13,7 @@ class RExpenseApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      home: ThemeManager(),
+      home: DashboardView(),
     );
   }
 }
-

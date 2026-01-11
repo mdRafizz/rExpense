@@ -15,10 +15,6 @@ class DashboardView extends StatelessWidget {
       value: SystemUiOverlayStyle(
         systemNavigationBarColor: context.cardColor,
         systemNavigationBarDividerColor: Colors.transparent,
-        systemNavigationBarIconBrightness:
-            Theme.of(context).brightness == Brightness.dark
-            ? Brightness.light
-            : Brightness.dark,
       ),
       child: Scaffold(
         body: Stack(
