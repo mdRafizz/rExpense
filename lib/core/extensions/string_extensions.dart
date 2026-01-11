@@ -124,7 +124,12 @@ extension StringTextExtensions on String {
   }
 
   /// Creates a Text widget with light font weight (300)
-  Widget toLight({double fontSize = 16.0, Color? color, TextOverflow? overflow, int? maxLines}) {
+  Widget toLight({
+    double fontSize = 16.0,
+    Color? color,
+    TextOverflow? overflow,
+    int? maxLines,
+  }) {
     return Text(
       this,
       style: TextStyles.light(fontSize: fontSize, color: color),
@@ -134,7 +139,12 @@ extension StringTextExtensions on String {
   }
 
   /// Creates a Text widget with regular font weight (400)
-  Widget toRegular({double fontSize = 16.0, Color? color, TextOverflow? overflow, int? maxLines}) {
+  Widget toRegular({
+    double fontSize = 16.0,
+    Color? color,
+    TextOverflow? overflow,
+    int? maxLines,
+  }) {
     return Text(
       this,
       style: TextStyles.regular(fontSize: fontSize, color: color),
@@ -144,7 +154,12 @@ extension StringTextExtensions on String {
   }
 
   /// Creates a Text widget with medium font weight (500)
-  Widget toMedium({double fontSize = 16.0, Color? color, TextOverflow? overflow, int? maxLines}) {
+  Widget toMedium({
+    double fontSize = 16.0,
+    Color? color,
+    TextOverflow? overflow,
+    int? maxLines,
+  }) {
     return Text(
       this,
       style: TextStyles.medium(fontSize: fontSize, color: color),
@@ -154,7 +169,12 @@ extension StringTextExtensions on String {
   }
 
   /// Creates a Text widget with semi-bold font weight (600)
-  Widget toSemiBold({double fontSize = 16.0, Color? color, TextOverflow? overflow, int? maxLines}) {
+  Widget toSemiBold({
+    double fontSize = 16.0,
+    Color? color,
+    TextOverflow? overflow,
+    int? maxLines,
+  }) {
     return Text(
       this,
       style: TextStyles.semiBold(fontSize: fontSize, color: color),
@@ -164,12 +184,36 @@ extension StringTextExtensions on String {
   }
 
   /// Creates a Text widget with bold font weight (700)
-  Widget toBold({double fontSize = 16.0, Color? color, TextOverflow? overflow, int? maxLines}) {
+  Widget toBold({
+    double fontSize = 16.0,
+    Color? color,
+    TextOverflow? overflow,
+    int? maxLines,
+  }) {
     return Text(
       this,
       style: TextStyles.bold(fontSize: fontSize, color: color),
       overflow: overflow,
       maxLines: maxLines,
     );
+  }
+
+  String toCamelCase() {
+    final words = trim().split(RegExp(r'[\s\-_]+'));
+    if (words.isEmpty || words.first.isEmpty) return "";
+
+    final camelCaseWord = words
+        .map((word) {
+          if (word.isEmpty) return "";
+          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+        })
+        .join("");
+
+    return camelCaseWord[0].toLowerCase() + camelCaseWord.substring(1);
+  }
+
+  Color toColor() {
+    final colorInt = int.tryParse(this, radix: 16);
+    return Color(0xFF000000 + colorInt! - 0xFF000000);
   }
 }

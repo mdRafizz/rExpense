@@ -6,10 +6,9 @@ extension PictureExtensions on String {
   Widget toSvgIcon({double? size = 17, Color? color}) {
     return SvgPicture.asset(
       "assets/images/icons/$this.svg",
-      colorFilter: ColorFilter.mode(
-        color ?? AppColor.onBackground,
-        BlendMode.srcIn,
-      ),
+      colorFilter: color != null
+          ? ColorFilter.mode(color, BlendMode.srcIn)
+          : null,
       width: size,
       height: size,
     );

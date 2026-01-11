@@ -21,6 +21,7 @@ dependencies:
   flutter_riverpod: ^2.6.1
   gap: ^3.0.1
   flutter_svg: ^2.2.3
+  logger: ^2.6.2
 
 dev_dependencies:
   flutter_test:

@@ -1365,6 +1365,651 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
   }
 }
 
+class $IncomeSourcesTable extends IncomeSources
+    with TableInfo<$IncomeSourcesTable, IncomeSource> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $IncomeSourcesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'income_sources';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<IncomeSource> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  IncomeSource map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return IncomeSource(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $IncomeSourcesTable createAlias(String alias) {
+    return $IncomeSourcesTable(attachedDatabase, alias);
+  }
+}
+
+class IncomeSource extends DataClass implements Insertable<IncomeSource> {
+  final int id;
+  final String name;
+  final DateTime createdAt;
+  const IncomeSource({
+    required this.id,
+    required this.name,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  IncomeSourcesCompanion toCompanion(bool nullToAbsent) {
+    return IncomeSourcesCompanion(
+      id: Value(id),
+      name: Value(name),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory IncomeSource.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return IncomeSource(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  IncomeSource copyWith({int? id, String? name, DateTime? createdAt}) =>
+      IncomeSource(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  IncomeSource copyWithCompanion(IncomeSourcesCompanion data) {
+    return IncomeSource(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IncomeSource(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is IncomeSource &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.createdAt == this.createdAt);
+}
+
+class IncomeSourcesCompanion extends UpdateCompanion<IncomeSource> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<DateTime> createdAt;
+  const IncomeSourcesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  IncomeSourcesCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    this.createdAt = const Value.absent(),
+  }) : name = Value(name);
+  static Insertable<IncomeSource> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  IncomeSourcesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<DateTime>? createdAt,
+  }) {
+    return IncomeSourcesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IncomeSourcesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $IncomeTable extends Income with TableInfo<$IncomeTable, IncomeData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $IncomeTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceIdMeta = const VerificationMeta(
+    'sourceId',
+  );
+  @override
+  late final GeneratedColumn<int> sourceId = GeneratedColumn<int>(
+    'source_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES income_sources (id)',
+    ),
+  );
+  static const VerificationMeta _incomeDateMeta = const VerificationMeta(
+    'incomeDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> incomeDate = GeneratedColumn<DateTime>(
+    'income_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    amount,
+    sourceId,
+    incomeDate,
+    note,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'income';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<IncomeData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('source_id')) {
+      context.handle(
+        _sourceIdMeta,
+        sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceIdMeta);
+    }
+    if (data.containsKey('income_date')) {
+      context.handle(
+        _incomeDateMeta,
+        incomeDate.isAcceptableOrUnknown(data['income_date']!, _incomeDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_incomeDateMeta);
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  IncomeData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return IncomeData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}amount'],
+      )!,
+      sourceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}source_id'],
+      )!,
+      incomeDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}income_date'],
+      )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $IncomeTable createAlias(String alias) {
+    return $IncomeTable(attachedDatabase, alias);
+  }
+}
+
+class IncomeData extends DataClass implements Insertable<IncomeData> {
+  final int id;
+  final double amount;
+  final int sourceId;
+  final DateTime incomeDate;
+  final String? note;
+  final DateTime createdAt;
+  const IncomeData({
+    required this.id,
+    required this.amount,
+    required this.sourceId,
+    required this.incomeDate,
+    this.note,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['amount'] = Variable<double>(amount);
+    map['source_id'] = Variable<int>(sourceId);
+    map['income_date'] = Variable<DateTime>(incomeDate);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  IncomeCompanion toCompanion(bool nullToAbsent) {
+    return IncomeCompanion(
+      id: Value(id),
+      amount: Value(amount),
+      sourceId: Value(sourceId),
+      incomeDate: Value(incomeDate),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory IncomeData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return IncomeData(
+      id: serializer.fromJson<int>(json['id']),
+      amount: serializer.fromJson<double>(json['amount']),
+      sourceId: serializer.fromJson<int>(json['sourceId']),
+      incomeDate: serializer.fromJson<DateTime>(json['incomeDate']),
+      note: serializer.fromJson<String?>(json['note']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'amount': serializer.toJson<double>(amount),
+      'sourceId': serializer.toJson<int>(sourceId),
+      'incomeDate': serializer.toJson<DateTime>(incomeDate),
+      'note': serializer.toJson<String?>(note),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  IncomeData copyWith({
+    int? id,
+    double? amount,
+    int? sourceId,
+    DateTime? incomeDate,
+    Value<String?> note = const Value.absent(),
+    DateTime? createdAt,
+  }) => IncomeData(
+    id: id ?? this.id,
+    amount: amount ?? this.amount,
+    sourceId: sourceId ?? this.sourceId,
+    incomeDate: incomeDate ?? this.incomeDate,
+    note: note.present ? note.value : this.note,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  IncomeData copyWithCompanion(IncomeCompanion data) {
+    return IncomeData(
+      id: data.id.present ? data.id.value : this.id,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      sourceId: data.sourceId.present ? data.sourceId.value : this.sourceId,
+      incomeDate: data.incomeDate.present
+          ? data.incomeDate.value
+          : this.incomeDate,
+      note: data.note.present ? data.note.value : this.note,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IncomeData(')
+          ..write('id: $id, ')
+          ..write('amount: $amount, ')
+          ..write('sourceId: $sourceId, ')
+          ..write('incomeDate: $incomeDate, ')
+          ..write('note: $note, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, amount, sourceId, incomeDate, note, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is IncomeData &&
+          other.id == this.id &&
+          other.amount == this.amount &&
+          other.sourceId == this.sourceId &&
+          other.incomeDate == this.incomeDate &&
+          other.note == this.note &&
+          other.createdAt == this.createdAt);
+}
+
+class IncomeCompanion extends UpdateCompanion<IncomeData> {
+  final Value<int> id;
+  final Value<double> amount;
+  final Value<int> sourceId;
+  final Value<DateTime> incomeDate;
+  final Value<String?> note;
+  final Value<DateTime> createdAt;
+  const IncomeCompanion({
+    this.id = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.sourceId = const Value.absent(),
+    this.incomeDate = const Value.absent(),
+    this.note = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  IncomeCompanion.insert({
+    this.id = const Value.absent(),
+    required double amount,
+    required int sourceId,
+    required DateTime incomeDate,
+    this.note = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  }) : amount = Value(amount),
+       sourceId = Value(sourceId),
+       incomeDate = Value(incomeDate);
+  static Insertable<IncomeData> custom({
+    Expression<int>? id,
+    Expression<double>? amount,
+    Expression<int>? sourceId,
+    Expression<DateTime>? incomeDate,
+    Expression<String>? note,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (amount != null) 'amount': amount,
+      if (sourceId != null) 'source_id': sourceId,
+      if (incomeDate != null) 'income_date': incomeDate,
+      if (note != null) 'note': note,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  IncomeCompanion copyWith({
+    Value<int>? id,
+    Value<double>? amount,
+    Value<int>? sourceId,
+    Value<DateTime>? incomeDate,
+    Value<String?>? note,
+    Value<DateTime>? createdAt,
+  }) {
+    return IncomeCompanion(
+      id: id ?? this.id,
+      amount: amount ?? this.amount,
+      sourceId: sourceId ?? this.sourceId,
+      incomeDate: incomeDate ?? this.incomeDate,
+      note: note ?? this.note,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<double>(amount.value);
+    }
+    if (sourceId.present) {
+      map['source_id'] = Variable<int>(sourceId.value);
+    }
+    if (incomeDate.present) {
+      map['income_date'] = Variable<DateTime>(incomeDate.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IncomeCompanion(')
+          ..write('id: $id, ')
+          ..write('amount: $amount, ')
+          ..write('sourceId: $sourceId, ')
+          ..write('incomeDate: $incomeDate, ')
+          ..write('note: $note, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1374,6 +2019,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CategoriesTable categories = $CategoriesTable(this);
   late final $SubCategoriesTable subCategories = $SubCategoriesTable(this);
   late final $ExpensesTable expenses = $ExpensesTable(this);
+  late final $IncomeSourcesTable incomeSources = $IncomeSourcesTable(this);
+  late final $IncomeTable income = $IncomeTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1383,6 +2030,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     categories,
     subCategories,
     expenses,
+    incomeSources,
+    income,
   ];
 }
 
@@ -3195,6 +3844,600 @@ typedef $$ExpensesTableProcessedTableManager =
         bool subCategoryId,
       })
     >;
+typedef $$IncomeSourcesTableCreateCompanionBuilder =
+    IncomeSourcesCompanion Function({
+      Value<int> id,
+      required String name,
+      Value<DateTime> createdAt,
+    });
+typedef $$IncomeSourcesTableUpdateCompanionBuilder =
+    IncomeSourcesCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<DateTime> createdAt,
+    });
+
+final class $$IncomeSourcesTableReferences
+    extends BaseReferences<_$AppDatabase, $IncomeSourcesTable, IncomeSource> {
+  $$IncomeSourcesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static MultiTypedResultKey<$IncomeTable, List<IncomeData>> _incomeRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.income,
+    aliasName: $_aliasNameGenerator(db.incomeSources.id, db.income.sourceId),
+  );
+
+  $$IncomeTableProcessedTableManager get incomeRefs {
+    final manager = $$IncomeTableTableManager(
+      $_db,
+      $_db.income,
+    ).filter((f) => f.sourceId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_incomeRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$IncomeSourcesTableFilterComposer
+    extends Composer<_$AppDatabase, $IncomeSourcesTable> {
+  $$IncomeSourcesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> incomeRefs(
+    Expression<bool> Function($$IncomeTableFilterComposer f) f,
+  ) {
+    final $$IncomeTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.income,
+      getReferencedColumn: (t) => t.sourceId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$IncomeTableFilterComposer(
+            $db: $db,
+            $table: $db.income,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$IncomeSourcesTableOrderingComposer
+    extends Composer<_$AppDatabase, $IncomeSourcesTable> {
+  $$IncomeSourcesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$IncomeSourcesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $IncomeSourcesTable> {
+  $$IncomeSourcesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  Expression<T> incomeRefs<T extends Object>(
+    Expression<T> Function($$IncomeTableAnnotationComposer a) f,
+  ) {
+    final $$IncomeTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.income,
+      getReferencedColumn: (t) => t.sourceId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$IncomeTableAnnotationComposer(
+            $db: $db,
+            $table: $db.income,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$IncomeSourcesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $IncomeSourcesTable,
+          IncomeSource,
+          $$IncomeSourcesTableFilterComposer,
+          $$IncomeSourcesTableOrderingComposer,
+          $$IncomeSourcesTableAnnotationComposer,
+          $$IncomeSourcesTableCreateCompanionBuilder,
+          $$IncomeSourcesTableUpdateCompanionBuilder,
+          (IncomeSource, $$IncomeSourcesTableReferences),
+          IncomeSource,
+          PrefetchHooks Function({bool incomeRefs})
+        > {
+  $$IncomeSourcesTableTableManager(_$AppDatabase db, $IncomeSourcesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$IncomeSourcesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$IncomeSourcesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$IncomeSourcesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => IncomeSourcesCompanion(
+                id: id,
+                name: name,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => IncomeSourcesCompanion.insert(
+                id: id,
+                name: name,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$IncomeSourcesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({incomeRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (incomeRefs) db.income],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (incomeRefs)
+                    await $_getPrefetchedData<
+                      IncomeSource,
+                      $IncomeSourcesTable,
+                      IncomeData
+                    >(
+                      currentTable: table,
+                      referencedTable: $$IncomeSourcesTableReferences
+                          ._incomeRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$IncomeSourcesTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).incomeRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.sourceId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$IncomeSourcesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $IncomeSourcesTable,
+      IncomeSource,
+      $$IncomeSourcesTableFilterComposer,
+      $$IncomeSourcesTableOrderingComposer,
+      $$IncomeSourcesTableAnnotationComposer,
+      $$IncomeSourcesTableCreateCompanionBuilder,
+      $$IncomeSourcesTableUpdateCompanionBuilder,
+      (IncomeSource, $$IncomeSourcesTableReferences),
+      IncomeSource,
+      PrefetchHooks Function({bool incomeRefs})
+    >;
+typedef $$IncomeTableCreateCompanionBuilder =
+    IncomeCompanion Function({
+      Value<int> id,
+      required double amount,
+      required int sourceId,
+      required DateTime incomeDate,
+      Value<String?> note,
+      Value<DateTime> createdAt,
+    });
+typedef $$IncomeTableUpdateCompanionBuilder =
+    IncomeCompanion Function({
+      Value<int> id,
+      Value<double> amount,
+      Value<int> sourceId,
+      Value<DateTime> incomeDate,
+      Value<String?> note,
+      Value<DateTime> createdAt,
+    });
+
+final class $$IncomeTableReferences
+    extends BaseReferences<_$AppDatabase, $IncomeTable, IncomeData> {
+  $$IncomeTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $IncomeSourcesTable _sourceIdTable(_$AppDatabase db) =>
+      db.incomeSources.createAlias(
+        $_aliasNameGenerator(db.income.sourceId, db.incomeSources.id),
+      );
+
+  $$IncomeSourcesTableProcessedTableManager get sourceId {
+    final $_column = $_itemColumn<int>('source_id')!;
+
+    final manager = $$IncomeSourcesTableTableManager(
+      $_db,
+      $_db.incomeSources,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sourceIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$IncomeTableFilterComposer
+    extends Composer<_$AppDatabase, $IncomeTable> {
+  $$IncomeTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get incomeDate => $composableBuilder(
+    column: $table.incomeDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$IncomeSourcesTableFilterComposer get sourceId {
+    final $$IncomeSourcesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sourceId,
+      referencedTable: $db.incomeSources,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$IncomeSourcesTableFilterComposer(
+            $db: $db,
+            $table: $db.incomeSources,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$IncomeTableOrderingComposer
+    extends Composer<_$AppDatabase, $IncomeTable> {
+  $$IncomeTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get incomeDate => $composableBuilder(
+    column: $table.incomeDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$IncomeSourcesTableOrderingComposer get sourceId {
+    final $$IncomeSourcesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sourceId,
+      referencedTable: $db.incomeSources,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$IncomeSourcesTableOrderingComposer(
+            $db: $db,
+            $table: $db.incomeSources,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$IncomeTableAnnotationComposer
+    extends Composer<_$AppDatabase, $IncomeTable> {
+  $$IncomeTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<double> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get incomeDate => $composableBuilder(
+    column: $table.incomeDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$IncomeSourcesTableAnnotationComposer get sourceId {
+    final $$IncomeSourcesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sourceId,
+      referencedTable: $db.incomeSources,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$IncomeSourcesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.incomeSources,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$IncomeTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $IncomeTable,
+          IncomeData,
+          $$IncomeTableFilterComposer,
+          $$IncomeTableOrderingComposer,
+          $$IncomeTableAnnotationComposer,
+          $$IncomeTableCreateCompanionBuilder,
+          $$IncomeTableUpdateCompanionBuilder,
+          (IncomeData, $$IncomeTableReferences),
+          IncomeData,
+          PrefetchHooks Function({bool sourceId})
+        > {
+  $$IncomeTableTableManager(_$AppDatabase db, $IncomeTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$IncomeTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$IncomeTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$IncomeTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<double> amount = const Value.absent(),
+                Value<int> sourceId = const Value.absent(),
+                Value<DateTime> incomeDate = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => IncomeCompanion(
+                id: id,
+                amount: amount,
+                sourceId: sourceId,
+                incomeDate: incomeDate,
+                note: note,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required double amount,
+                required int sourceId,
+                required DateTime incomeDate,
+                Value<String?> note = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => IncomeCompanion.insert(
+                id: id,
+                amount: amount,
+                sourceId: sourceId,
+                incomeDate: incomeDate,
+                note: note,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) =>
+                    (e.readTable(table), $$IncomeTableReferences(db, table, e)),
+              )
+              .toList(),
+          prefetchHooksCallback: ({sourceId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (sourceId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.sourceId,
+                                referencedTable: $$IncomeTableReferences
+                                    ._sourceIdTable(db),
+                                referencedColumn: $$IncomeTableReferences
+                                    ._sourceIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$IncomeTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $IncomeTable,
+      IncomeData,
+      $$IncomeTableFilterComposer,
+      $$IncomeTableOrderingComposer,
+      $$IncomeTableAnnotationComposer,
+      $$IncomeTableCreateCompanionBuilder,
+      $$IncomeTableUpdateCompanionBuilder,
+      (IncomeData, $$IncomeTableReferences),
+      IncomeData,
+      PrefetchHooks Function({bool sourceId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3207,4 +4450,8 @@ class $AppDatabaseManager {
       $$SubCategoriesTableTableManager(_db, _db.subCategories);
   $$ExpensesTableTableManager get expenses =>
       $$ExpensesTableTableManager(_db, _db.expenses);
+  $$IncomeSourcesTableTableManager get incomeSources =>
+      $$IncomeSourcesTableTableManager(_db, _db.incomeSources);
+  $$IncomeTableTableManager get income =>
+      $$IncomeTableTableManager(_db, _db.income);
 }

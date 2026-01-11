@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:r_expense/core/theme/app_tehme.dart';
+import 'package:r_expense/core/theme/app_theme.dart';
 
 class RExpenseApp extends StatelessWidget {
   const RExpenseApp({super.key});
@@ -10,8 +10,8 @@ class RExpenseApp extends StatelessWidget {
     return MaterialApp(
       title: 'rExpense',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
       home: ThemeManager(),
     );
   }
