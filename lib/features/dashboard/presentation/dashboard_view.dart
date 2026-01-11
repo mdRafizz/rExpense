@@ -11,13 +11,6 @@ class DashboardView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final buttonList = [
-      "Income History",
-      "Expense History",
-      "Add Income",
-      "Add Expense",
-    ];
-
     return AnnotatedRegion(
       value: SystemUiOverlayStyle(
         systemNavigationBarColor: context.cardColor,
