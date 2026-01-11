@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:r_expense/core/database/tables/income_source.dart';
 import 'package:r_expense/core/database/tables/income_table.dart';
+import 'package:r_expense/core/database/tables/wallets_table.dart';
 
 import 'tables/category_master_table.dart';
 import 'tables/category_table.dart';
@@ -21,6 +22,7 @@ part 'app_database.g.dart';
     Expenses,
     Income,
     IncomeSources,
+    Wallets,
   ],
 )
 

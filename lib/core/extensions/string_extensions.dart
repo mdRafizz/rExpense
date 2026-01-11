@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:r_expense/core/extensions/context_extension.dart';
 import '../theme/text_styles.dart';
 
 /// Extension on String to provide easy text widget creation with predefined styles
@@ -90,6 +91,26 @@ extension StringTextExtensions on String {
       style: TextStyles.subtitle1(color: color),
       overflow: overflow,
       maxLines: maxLines,
+    );
+  }
+
+  Widget toMandatoryLabel(BuildContext context, {Color? color}) {
+    return Text.rich(
+      TextSpan(
+        text: this,
+        style: TextStyles.subtitle1(color: color),
+        children: [
+          WidgetSpan(
+            child: Transform.translate(
+              offset: const Offset(0, -4),
+              child: Text(
+                ' *',
+                style: TextStyle(color: context.buttonRedColor, fontSize: 12),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
