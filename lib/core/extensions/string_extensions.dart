@@ -98,7 +98,7 @@ extension StringTextExtensions on String {
     return Text.rich(
       TextSpan(
         text: this,
-        style: TextStyles.subtitle1(color: color),
+        style: TextStyles.subtitle2(color: color),
         children: [
           WidgetSpan(
             child: Transform.translate(
@@ -234,7 +234,13 @@ extension StringTextExtensions on String {
   }
 
   Color toColor() {
-    final colorInt = int.tryParse(this, radix: 16);
-    return Color(0xFF000000 + colorInt! - 0xFF000000);
+    String hexString = this.replaceFirst('#', '');
+
+    if (hexString.length == 6) {
+      hexString = 'FF$hexString';
+    }
+
+    final colorInt = int.parse(hexString, radix: 16);
+    return Color(colorInt);
   }
 }

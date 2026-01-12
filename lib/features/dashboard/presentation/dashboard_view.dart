@@ -5,6 +5,9 @@ import 'package:gap/gap.dart';
 import 'package:r_expense/core/extensions/context_extension.dart';
 import 'package:r_expense/core/extensions/extensions.dart';
 import 'package:r_expense/features/income/presentation/add_income_view.dart';
+import 'package:r_expense/features/wallet/presentation/add_wallet_view.dart';
+
+import '../../../core/widgets/custom_labeled_text_field.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
@@ -98,30 +101,18 @@ class DashboardView extends StatelessWidget {
                     Gap(20),
                     Expanded(
                       child: GestureDetector(
-                        onTap: (){
-                          showCupertinoModalPopup(context: context, builder: (context){
-                            return Container(
-                              padding: .symmetric(horizontal: 12,vertical: 20),
-                              decoration: BoxDecoration(
-                                borderRadius: .all(.circular(10)),
-                                color: context.scaffoldColor
-                              ),
-                              child: Column(
-                                crossAxisAlignment: .start,
-                                children: [
-                                  "Add Wallet".toSubtitle1(),
-
-                                ],
-                              )
-                            );
-                          });
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => AddWalletView(),
+                            ),
+                          );
                         },
                         child: Container(
                           height: 40,
                           decoration: BoxDecoration(
                             color: context.buttonRedColor,
                             borderRadius: BorderRadius.all(Radius.circular(10)),
-                            // border: Border.all(width: .5,color: context.dividerColor)
                           ),
                           alignment: .center,
                           child: Row(

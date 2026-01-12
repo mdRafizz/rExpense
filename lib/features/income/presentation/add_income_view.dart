@@ -39,7 +39,10 @@ class AddIncomeView extends StatelessWidget {
                         color: context.cardColor,
                       ),
                       alignment: .center,
-                      child: "back".toSvgIcon(color: context.textColor,size: 12),
+                      child: "back".toSvgIcon(
+                        color: context.textColor,
+                        size: 12,
+                      ),
                     ),
                   ),
                   Gap(20),
@@ -51,7 +54,7 @@ class AddIncomeView extends StatelessWidget {
                 padding: const .symmetric(horizontal: 10, vertical: 13),
                 decoration: BoxDecoration(
                   color: context.cardColor,
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  borderRadius: const .all(.circular(10)),
                 ),
                 child: Column(
                   crossAxisAlignment: .start,
@@ -75,14 +78,26 @@ class AddIncomeView extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(10),
                                 child: Container(
                                   height: 40,
-                                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                                  color: context.scaffoldColor, // Sets the background color
-                                  child: DropdownButtonHideUnderline( // Removes the bottom divider
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  color: context.scaffoldColor,
+                                  // Sets the background color
+                                  child: DropdownButtonHideUnderline(
+                                    // Removes the bottom divider
                                     child: DropdownButton<int>(
-                                      isExpanded: true, // Makes sure it fills the width
-                                      hint: "Select Type".toCaption(color: context.dividerColor,),
-                                      dropdownColor: context.scaffoldColor, // Sets the menu popup color
-                                      icon: Icon(Icons.arrow_drop_down_rounded, color: context.textColor, size: 20),
+                                      isExpanded: true,
+                                      // Makes sure it fills the width
+                                      hint: "Select Type".toCaption(
+                                        color: context.dividerColor,
+                                      ),
+                                      dropdownColor: context.scaffoldColor,
+                                      // Sets the menu popup color
+                                      icon: Icon(
+                                        Icons.arrow_drop_down_rounded,
+                                        color: context.textColor,
+                                        size: 20,
+                                      ),
                                       items: [
                                         DropdownMenuItem(
                                           value: 1,
@@ -116,17 +131,21 @@ class AddIncomeView extends StatelessWidget {
                               const Gap(8),
                               Container(
                                 height: 40,
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
                                 decoration: BoxDecoration(
                                   color: context.scaffoldColor,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     // Replace with your date variable logic
                                     "Select Date".toCaption(
-                                      color: context.dividerColor, // Or context.textColor if date is selected
+                                      color: context
+                                          .dividerColor, // Or context.textColor if date is selected
                                     ),
                                     Icon(
                                       Icons.calendar_month_outlined,
@@ -140,7 +159,8 @@ class AddIncomeView extends StatelessWidget {
                           ),
                         ),
                       ],
-                    )                  ],
+                    ),
+                  ],
                 ),
               ),
             ],

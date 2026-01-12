@@ -6,10 +6,7 @@ class Wallets extends Table {
   TextColumn get name => text()();
 
   TextColumn get type => text()();
-
   // cash, bank, mobile, credit
-
-  TextColumn get bankName => text().nullable()();
 
   TextColumn get accountNumber => text().nullable()();
 

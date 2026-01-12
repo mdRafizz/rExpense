@@ -12,4 +12,11 @@ extension PictureExtensions on String {
       height: size,
     );
   }
+
+  DecorationImage toContainerBG({double? size, Color? color}) {
+    return DecorationImage(
+      image: AssetImage("assets/images/pics/$this.jpg"),
+      fit: BoxFit.cover,
+    );
+  }
 }
