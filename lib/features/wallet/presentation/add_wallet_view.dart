@@ -8,7 +8,6 @@ import 'package:r_expense/core/widgets/custom_labeled_text_field.dart';
 
 import '../../../core/extensions/picture_extensions.dart';
 import '../../../core/extensions/string_extensions.dart';
-import '../../../core/theme/text_styles.dart';
 
 class AddWalletView extends StatelessWidget {
   const AddWalletView({super.key});

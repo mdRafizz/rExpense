@@ -7,7 +7,6 @@ import 'package:r_expense/core/extensions/extensions.dart';
 import 'package:r_expense/features/income/presentation/add_income_view.dart';
 import 'package:r_expense/features/wallet/presentation/add_wallet_view.dart';
 
-import '../../../core/widgets/custom_labeled_text_field.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});

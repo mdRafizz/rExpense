@@ -6,7 +6,6 @@ import 'package:r_expense/core/widgets/custom_labeled_text_field.dart';
 
 import '../../../core/extensions/picture_extensions.dart';
 import '../../../core/extensions/string_extensions.dart';
-import '../../../core/theme/text_styles.dart';
 
 class AddIncomeView extends StatelessWidget {
   const AddIncomeView({super.key});
