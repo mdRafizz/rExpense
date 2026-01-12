@@ -97,21 +97,41 @@ class DashboardView extends StatelessWidget {
                     ),
                     Gap(20),
                     Expanded(
-                      child: Container(
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: context.buttonRedColor,
-                          borderRadius: BorderRadius.all(Radius.circular(10)),
-                          // border: Border.all(width: .5,color: context.dividerColor)
-                        ),
-                        alignment: .center,
-                        child: Row(
-                          mainAxisAlignment: .center,
-                          children: [
-                            "addExpense".toSvgIcon(color: Colors.white),
-                            Gap(10),
-                            "Expense".toSubtitle2(color: Colors.white),
-                          ],
+                      child: GestureDetector(
+                        onTap: (){
+                          showCupertinoModalPopup(context: context, builder: (context){
+                            return Container(
+                              padding: .symmetric(horizontal: 12,vertical: 20),
+                              decoration: BoxDecoration(
+                                borderRadius: .all(.circular(10)),
+                                color: context.scaffoldColor
+                              ),
+                              child: Column(
+                                crossAxisAlignment: .start,
+                                children: [
+                                  "Add Wallet".toSubtitle1(),
+
+                                ],
+                              )
+                            );
+                          });
+                        },
+                        child: Container(
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: context.buttonRedColor,
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                            // border: Border.all(width: .5,color: context.dividerColor)
+                          ),
+                          alignment: .center,
+                          child: Row(
+                            mainAxisAlignment: .center,
+                            children: [
+                              "addExpense".toSvgIcon(color: Colors.white),
+                              Gap(10),
+                              "Expense".toSubtitle2(color: Colors.white),
+                            ],
+                          ),
                         ),
                       ),
                     ),

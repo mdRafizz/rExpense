@@ -6,7 +6,16 @@ class Wallets extends Table {
   TextColumn get name => text()();
 
   TextColumn get type => text()();
+
   // cash, bank, mobile, credit
+
+  TextColumn get bankName => text().nullable()();
+
+  TextColumn get accountNumber => text().nullable()();
+
+  DateTimeColumn get openingDate => dateTime().nullable()();
+
+  DateTimeColumn get closingDate => dateTime().nullable()();
 
   RealColumn get openingBalance => real().withDefault(const Constant(0))();
 
@@ -14,6 +23,5 @@ class Wallets extends Table {
 
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
 
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
