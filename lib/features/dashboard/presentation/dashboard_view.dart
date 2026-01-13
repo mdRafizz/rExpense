@@ -7,6 +7,8 @@ import 'package:r_expense/core/extensions/extensions.dart';
 import 'package:r_expense/features/income/presentation/add_income_view.dart';
 import 'package:r_expense/features/wallet/presentation/add_wallet_view.dart';
 
+import '../../../core/widgets/custom_labeled_text_field.dart';
+import '../../../core/widgets/glassmorphic_card.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
@@ -102,9 +104,7 @@ class DashboardView extends StatelessWidget {
                       child: GestureDetector(
                         onTap: () {
                           Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => AddWalletView(),
-                            ),
+                            MaterialPageRoute(builder: (_)=> AddWalletView())
                           );
                         },
                         child: Container(
@@ -112,6 +112,7 @@ class DashboardView extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: context.buttonRedColor,
                             borderRadius: BorderRadius.all(Radius.circular(10)),
+                            // border: Border.all(width: .5,color: context.dividerColor)
                           ),
                           alignment: .center,
                           child: Row(

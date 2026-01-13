@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:r_expense/core/theme/app_color.dart';
 
 import '../extensions/context_extension.dart';
 import '../extensions/string_extensions.dart';
@@ -55,10 +56,10 @@ class CustomLabeledTextField extends StatelessWidget {
             decoration: InputDecoration(
               isDense: true,
               filled: true,
-              fillColor: context.scaffoldColor,
+              fillColor: context.textFieldColor,
               hintText: hintText,
               hintStyle: TextStyles.regular(
-                color: context.dividerColor,
+                color: context.textColor.withValues(alpha: .4),
                 fontSize: 12,
               ),
               contentPadding: const .all(12),

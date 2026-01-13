@@ -5,12 +5,13 @@ import '../theme/text_styles.dart';
 /// Extension on String to provide easy text widget creation with predefined styles
 extension StringTextExtensions on String {
   /// Creates a Text widget with bodyText2 style
-  Widget toBody2({Color? color, TextOverflow? overflow, int? maxLines}) {
+  Widget toBody2({Color? color, TextOverflow? overflow, int? maxLines, TextAlign? textAlign}) {
     return Text(
       this,
       style: TextStyles.bodyText2(color: color),
       overflow: overflow,
       maxLines: maxLines,
+      textAlign: textAlign,
     );
   }
 

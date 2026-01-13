@@ -13,11 +13,16 @@ class AppTheme {
       brightness: Brightness.light,
       scaffoldBackgroundColor: AppColors.lScaffold,
       cardColor: AppColors.lCard,
-      /*appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.lightScaffold,
+      appBarTheme: AppBarTheme(
+        backgroundColor: AppColors.lAppbar,
         elevation: 0,
-        titleTextStyle: TextStyle(color: AppColors.lightText, fontSize: 20),
-      ),*/
+        titleTextStyle: TextStyle(
+          color: AppColors.lText,
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          fontFamily: "Fredoka"
+        ),
+      ),
       textTheme: const TextTheme(
         bodyLarge: TextStyle(color: AppColors.lText),
         bodyMedium: TextStyle(color: AppColors.lText),
@@ -44,11 +49,16 @@ class AppTheme {
       brightness: Brightness.dark,
       scaffoldBackgroundColor: AppColors.dScaffold,
       cardColor: AppColors.dCard,
-      /*appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.darkScaffold,
+      appBarTheme: AppBarTheme(
+        backgroundColor: AppColors.dAppbar,
         elevation: 0,
-        titleTextStyle: TextStyle(color: AppColors.darkText, fontSize: 20),
-      ),*/
+        titleTextStyle: TextStyle(
+            color: AppColors.dText,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            fontFamily: "Fredoka"
+        ),
+      ),
       textTheme: const TextTheme(
         bodyLarge: TextStyle(color: AppColors.dText),
         bodyMedium: TextStyle(color: AppColors.dText),
