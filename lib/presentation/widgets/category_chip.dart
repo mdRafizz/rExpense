@@ -2,6 +2,33 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/category.dart';
 import '../../core/theme/app_text_styles.dart';
 
+/// Renders a category icon — supports both emoji strings and legacy
+/// Material icon hex codepoints.
+class _CategoryIcon extends StatelessWidget {
+  final String icon;
+  final Color color;
+  final double size;
+
+  const _CategoryIcon({
+    required this.icon,
+    required this.color,
+    required this.size,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final code = int.tryParse(icon, radix: 16);
+    if (code == null) {
+      return Text(icon, style: TextStyle(fontSize: size));
+    }
+    return Icon(
+      IconData(code, fontFamily: 'MaterialIcons'),
+      color: color,
+      size: size,
+    );
+  }
+}
+
 /// A compact chip displaying a category's icon and name.
 class CategoryChip extends StatelessWidget {
   final Category category;
@@ -40,14 +67,7 @@ class CategoryChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              IconData(
-                int.parse(category.icon, radix: 16),
-                fontFamily: 'MaterialIcons',
-              ),
-              color: color,
-              size: 16,
-            ),
+            _CategoryIcon(icon: category.icon, color: color, size: 16),
             const SizedBox(width: 6),
             Text(
               category.name,

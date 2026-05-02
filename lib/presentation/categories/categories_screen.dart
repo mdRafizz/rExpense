@@ -153,11 +153,7 @@ class _CategoryTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
-              child: Icon(
-                _iconData(category.icon),
-                color: color,
-                size: 20,
-              ),
+              child: _iconWidget(category.icon, color),
             ),
           ),
           const SizedBox(width: 14),
@@ -207,12 +203,21 @@ class _CategoryTile extends StatelessWidget {
     );
   }
 
-  /// Safely parse a hex codepoint string to an IconData.
-  /// Falls back to [Icons.label_outline] if the string is invalid.
-  IconData _iconData(String hex) {
-    final code = int.tryParse(hex, radix: 16);
-    if (code == null) return Icons.label_outline;
-    return IconData(code, fontFamily: 'MaterialIcons');
+  /// Render the category icon — supports both emoji strings and legacy
+  /// Material icon hex codepoints.
+  Widget _iconWidget(String icon, Color color) {
+    // If it's a single grapheme cluster (emoji), render as text
+    final code = int.tryParse(icon, radix: 16);
+    if (code == null) {
+      // Emoji path
+      return Text(icon, style: const TextStyle(fontSize: 20));
+    }
+    // Legacy hex codepoint path
+    return Icon(
+      IconData(code, fontFamily: 'MaterialIcons'),
+      color: color,
+      size: 20,
+    );
   }
 
   Future<void> _confirmDelete(BuildContext context, Category cat) async {

@@ -119,14 +119,10 @@ class _DetailView extends StatelessWidget {
                   _DetailRow(
                     label: 'Category',
                     value: category?.name ?? 'Unknown',
-                    icon: category != null
-                        ? IconData(
-                            int.parse(category.icon, radix: 16),
-                            fontFamily: 'MaterialIcons',
-                          )
-                        : Icons.category_outlined,
+                    icon: _categoryIconData(category),
                     iconColor:
                         category != null ? Color(category.color) : null,
+                    emojiIcon: _categoryEmoji(category),
                   ),
                   const Divider(height: 24),
                   _DetailRow(
@@ -192,23 +188,36 @@ class _DetailRow extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color? iconColor;
+  /// If set, renders an emoji instead of [icon].
+  final String? emojiIcon;
 
   const _DetailRow({
     required this.label,
     required this.value,
     required this.icon,
     this.iconColor,
+    this.emojiIcon,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 18,
-          color: iconColor ?? Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
+        if (emojiIcon != null)
+          SizedBox(
+            width: 18,
+            child: Text(
+              emojiIcon!,
+              style: const TextStyle(fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+          )
+        else
+          Icon(
+            icon,
+            size: 18,
+            color: iconColor ?? Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -228,4 +237,21 @@ class _DetailRow extends StatelessWidget {
       ],
     );
   }
+}
+
+// ── Icon helpers ──────────────────────────────────────────────────────────────
+
+/// Returns the emoji string if [cat]'s icon is not a hex codepoint, else null.
+String? _categoryEmoji(dynamic cat) {
+  if (cat == null) return null;
+  final code = int.tryParse(cat.icon as String, radix: 16);
+  return code == null ? cat.icon as String : null;
+}
+
+/// Returns an [IconData] for [cat]'s icon if it's a hex codepoint.
+IconData _categoryIconData(dynamic cat) {
+  if (cat == null) return Icons.category_outlined;
+  final code = int.tryParse(cat.icon as String, radix: 16);
+  if (code == null) return Icons.category_outlined; // emoji case — emojiIcon used instead
+  return IconData(code, fontFamily: 'MaterialIcons');
 }

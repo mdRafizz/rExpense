@@ -54,7 +54,7 @@ class TransactionListItem extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: Text(
+                child: const Text(
                   'Delete',
                   style: TextStyle(color: AppColors.danger),
                 ),
@@ -90,16 +90,7 @@ class TransactionListItem extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
-                  child: Icon(
-                    category != null
-                        ? IconData(
-                            int.parse(category!.icon, radix: 16),
-                            fontFamily: 'MaterialIcons',
-                          )
-                        : Icons.receipt_outlined,
-                    color: color,
-                    size: 20,
-                  ),
+                  child: _categoryIconWidget(category, color),
                 ),
               ),
               const SizedBox(width: 12),
@@ -148,4 +139,21 @@ class TransactionListItem extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Renders a category icon — supports emoji strings and legacy hex codepoints.
+Widget _categoryIconWidget(Category? cat, Color color) {
+  if (cat == null) {
+    return Icon(Icons.receipt_outlined, color: color, size: 20);
+  }
+  final code = int.tryParse(cat.icon, radix: 16);
+  if (code == null) {
+    // Emoji path
+    return Text(cat.icon, style: const TextStyle(fontSize: 20));
+  }
+  return Icon(
+    IconData(code, fontFamily: 'MaterialIcons'),
+    color: color,
+    size: 20,
+  );
 }
