@@ -213,6 +213,8 @@ class _CategoryFormScreenState extends State<CategoryFormScreen> {
         body: Form(
           key: _formKey,
           child: ListView(
+            physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics()),
             padding: const EdgeInsets.all(20),
             children: [
               // ── Preview ────────────────────────────────────────────────────

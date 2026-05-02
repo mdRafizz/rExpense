@@ -57,9 +57,10 @@ class SyncRepositoryImpl implements SyncRepository {
 
   @override
   Future<String?> getSignedInEmail() async {
-    AppLogger.v(_tag, 'getSignedInEmail() — checking current user');
-    final account = _googleSignIn.currentUser ??
-        await _googleSignIn.signInSilently();
+    AppLogger.v(_tag, 'getSignedInEmail() — checking current user only');
+    // Only check the cached current user — do NOT attempt silent sign-in.
+    // Silent sign-in is an explicit user action (Settings → Sign in).
+    final account = _googleSignIn.currentUser;
     AppLogger.v(_tag, 'getSignedInEmail() → ${account?.email ?? 'null (not signed in)'}');
     return account?.email;
   }
@@ -204,8 +205,8 @@ class SyncRepositoryImpl implements SyncRepository {
 
   Future<drive.DriveApi?> _getDriveApi() async {
     AppLogger.v(_tag, '_getDriveApi() resolving account');
-    final account = _googleSignIn.currentUser ??
-        await _googleSignIn.signInSilently();
+    // Only use the cached current user — never silently re-authenticate.
+    final account = _googleSignIn.currentUser;
     if (account == null) {
       AppLogger.v(_tag, '_getDriveApi() → null (no account)');
       return null;

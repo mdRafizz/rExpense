@@ -1,11 +1,28 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// Bottom navigation shell — 4 tabs with a centred FAB.
-class AppShell extends StatelessWidget {
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text_styles.dart';
+
+/// Bottom navigation shell with glass-style nav bar and circular FAB.
+///
+/// Back-stack behaviour is handled at the root [PopScope] in main.dart:
+/// - Non-home tabs → go to /dashboard
+/// - Dashboard → show exit dialog
+/// - Full-screen routes → normal pop
+///
+/// Tapping Home always calls context.go('/dashboard') to clear any stack.
+class AppShell extends StatefulWidget {
   final Widget child;
   const AppShell({super.key, required this.child});
 
+  @override
+  State<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends State<AppShell> {
   static const _tabs = [
     _Tab(
       icon: Icons.home_outlined,
@@ -41,31 +58,217 @@ class AppShell extends StatelessWidget {
     return 0;
   }
 
+  void _onTabTap(BuildContext context, int index) {
+    final currentIndex = _currentIndex(context);
+    if (index == 0) {
+      // Home always clears to dashboard root
+      context.go('/dashboard');
+    } else if (index == currentIndex) {
+      // Same tab — no-op
+    } else {
+      context.go(_tabs[index].path);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentIndex = _currentIndex(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      body: child,
-      floatingActionButton: FloatingActionButton(
+      extendBody: true,
+      body: widget.child,
+      floatingActionButton: _GlassFab(
         onPressed: () => context.push('/transactions/add'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: const Icon(Icons.add, size: 28),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: currentIndex,
-        onDestinationSelected: (i) => context.go(_tabs[i].path),
-        destinations: _tabs
-            .map((t) => NavigationDestination(
-                  icon: Icon(t.icon),
-                  selectedIcon: Icon(t.activeIcon),
-                  label: t.label,
-                ))
-            .toList(),
+      bottomNavigationBar: _GlassNavBar(
+        currentIndex: currentIndex,
+        isDark: isDark,
+        tabs: _tabs,
+        onTap: (i) => _onTabTap(context, i),
+      ),
+    );
+  }
+}
+
+// ── Glass FAB ─────────────────────────────────────────────────────────────────
+
+class _GlassFab extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const _GlassFab({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.primary, AppColors.primaryDark],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.45),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: const Icon(Icons.add, color: Colors.white, size: 28),
+      ),
+    );
+  }
+}
+
+// ── Glass Nav Bar ─────────────────────────────────────────────────────────────
+
+class _GlassNavBar extends StatelessWidget {
+  final int currentIndex;
+  final bool isDark;
+  final List<_Tab> tabs;
+  final ValueChanged<int> onTap;
+
+  const _GlassNavBar({
+    required this.currentIndex,
+    required this.isDark,
+    required this.tabs,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.55)
+                : Colors.white.withValues(alpha: 0.75),
+            border: Border(
+              top: BorderSide(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.white.withValues(alpha: 0.6),
+                width: 0.5,
+              ),
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: SizedBox(
+              height: 64,
+              child: Row(
+                children: [
+                  // Left two tabs
+                  Expanded(
+                    child: Row(
+                      children: [
+                        _NavItem(
+                          tab: tabs[0],
+                          isSelected: currentIndex == 0,
+                          isDark: isDark,
+                          onTap: () => onTap(0),
+                        ),
+                        _NavItem(
+                          tab: tabs[1],
+                          isSelected: currentIndex == 1,
+                          isDark: isDark,
+                          onTap: () => onTap(1),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // FAB space
+                  const SizedBox(width: 72),
+                  // Right two tabs
+                  Expanded(
+                    child: Row(
+                      children: [
+                        _NavItem(
+                          tab: tabs[2],
+                          isSelected: currentIndex == 2,
+                          isDark: isDark,
+                          onTap: () => onTap(2),
+                        ),
+                        _NavItem(
+                          tab: tabs[3],
+                          isSelected: currentIndex == 3,
+                          isDark: isDark,
+                          onTap: () => onTap(3),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem extends StatelessWidget {
+  final _Tab tab;
+  final bool isSelected;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _NavItem({
+    required this.tab,
+    required this.isSelected,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isSelected
+        ? AppColors.primary
+        : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight);
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.primary.withValues(alpha: 0.12)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(
+                isSelected ? tab.activeIcon : tab.icon,
+                color: color,
+                size: 22,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              tab.label,
+              style: AppTextStyles.labelSmall.copyWith(
+                color: color,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

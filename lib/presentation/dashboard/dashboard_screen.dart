@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -7,41 +9,11 @@ import '../../application/dashboard/dashboard_cubit.dart';
 import '../../application/category/category_cubit.dart';
 import '../../application/member/member_cubit.dart';
 import '../../core/di/injection.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../domain/entities/transaction.dart';
 import '../../domain/entities/member.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/transaction_list_item.dart';
-
-// ── Quick-track category ids & display config ─────────────────────────────────
-// These map to the seeded category ids in app_database.dart
-const _quickTrackItems = [
-  _QuickTrackDef(
-    categoryId: 'cat_egg',
-    label: 'Egg',
-    emoji: '🥚',
-    color: Color(0xFFFFBE0B),
-  ),
-  _QuickTrackDef(
-    categoryId: 'cat_electricity',
-    label: 'Electric',
-    emoji: '⚡',
-    color: Color(0xFFFFBE0B),
-  ),
-  _QuickTrackDef(
-    categoryId: 'cat_medicine',
-    label: 'Medicine',
-    emoji: '💊',
-    color: Color(0xFFEF476F),
-  ),
-  _QuickTrackDef(
-    categoryId: 'cat_transport',
-    label: 'Transport',
-    emoji: '🚌',
-    color: Color(0xFF3A86FF),
-  ),
-];
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -66,15 +38,13 @@ class _DashboardView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: BlocBuilder<DashboardCubit, DashboardState>(
-          builder: (context, state) => switch (state) {
-            DashboardLoading() =>
-              const Center(child: CircularProgressIndicator()),
-            DashboardError(:final message) => Center(child: Text(message)),
-            DashboardLoaded() => _LoadedBody(state: state),
-          },
-        ),
+      body: BlocBuilder<DashboardCubit, DashboardState>(
+        builder: (context, state) => switch (state) {
+          DashboardLoading() =>
+            const Center(child: CircularProgressIndicator()),
+          DashboardError(:final message) => Center(child: Text(message)),
+          DashboardLoaded() => _LoadedBody(state: state),
+        },
       ),
     );
   }
@@ -91,184 +61,304 @@ class _LoadedBody extends StatelessWidget {
     final categoryMap = catState is CategoryLoaded
         ? {for (final c in catState.categories) c.id: c}
         : <String, dynamic>{};
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final topPadding = MediaQuery.of(context).padding.top;
 
-    return CustomScrollView(
-      slivers: [
-        // ── App Bar ──────────────────────────────────────────────────────────
-        SliverAppBar(
-          floating: true,
-          snap: true,
-          titleSpacing: 20,
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'rExpense',
-                style: AppTextStyles.headlineMedium.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface,
+    return Column(
+      children: [
+        // ── Sticky Header (AppBar + SummaryCard) ─────────────────────────────
+        _GlassHeader(
+          state: state,
+          cubit: cubit,
+          isDark: isDark,
+          topPadding: topPadding,
+        ),
+
+        // ── Scrollable Transaction List ───────────────────────────────────────
+        Expanded(
+          child: state.transactions.isEmpty
+              ? _EmptyTransactions()
+              : _TransactionList(
+                  transactions: state.transactions,
+                  categoryMap: categoryMap,
                 ),
-              ),
-              Text(
-                DateFormat('MMMM y').format(state.selectedMonth),
-                style: AppTextStyles.bodySmall,
-              ),
-            ],
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.chevron_left),
-              onPressed: cubit.previousMonth,
-              tooltip: 'Previous month',
-            ),
-            IconButton(
-              icon: const Icon(Icons.chevron_right),
-              onPressed: cubit.nextMonth,
-              tooltip: 'Next month',
-            ),
-            const SizedBox(width: 8),
-          ],
         ),
-
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate([
-              // ── Member Strip ───────────────────────────────────────────────
-              /*BlocBuilder<MemberCubit, MemberState>(
-                builder: (context, memberState) {
-                  if (memberState is! MemberLoaded) return const SizedBox.shrink();
-                  return _MemberStrip(
-                    members: memberState.members,
-                    activeMemberId: memberState.activeMemberId,
-                    onSelect: (id) =>
-                        context.read<MemberCubit>().selectMember(id),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-*/
-              // ── Summary Card ───────────────────────────────────────────────
-              SummaryCard(
-                income: state.summary.totalIncome,
-                expense: state.summary.totalExpense,
-                periodLabel: DateFormat('MMMM y').format(state.selectedMonth),
-              ),
-              const SizedBox(height: 24),
-
-              // ── Quick Track ────────────────────────────────────────────────
-              /*const Text('Quick Track', style: AppTextStyles.headlineSmall),
-              const SizedBox(height: 12),
-              _QuickTrackRow(
-                items: _quickTrackItems,
-                defaultMemberId: sl<MemberCubit>().effectiveMemberId,
-              ),
-              const SizedBox(height: 24),*/
-
-              // ── Add buttons ────────────────────────────────────────────────
-              Row(
-                children: [
-                  Expanded(
-                    child: _ActionButton(
-                      label: 'Add Income',
-                      icon: Icons.add_circle_outline,
-                      color: AppColors.income,
-                      onTap: () => context.push(
-                        '/transactions/add',
-                        extra: {'type': TransactionType.income},
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _ActionButton(
-                      label: 'Add Expense',
-                      icon: Icons.remove_circle_outline,
-                      color: AppColors.expense,
-                      onTap: () => context.push(
-                        '/transactions/add',
-                        extra: {'type': TransactionType.expense},
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 28),
-
-              // ── Transactions header ────────────────────────────────────────
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Transactions',
-                    style: AppTextStyles.headlineSmall.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  Text(
-                    '${state.transactions.length} total',
-                    style: AppTextStyles.bodySmall,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-            ]),
-          ),
-        ),
-
-        // ── Transaction List ─────────────────────────────────────────────────
-        if (state.transactions.isEmpty)
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.receipt_long_outlined,
-                    size: 64,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.2),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No transactions yet',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.4),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          )
-        else
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-            sliver: SliverList.separated(
-              itemCount: state.transactions.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final t = state.transactions[index];
-                return TransactionListItem(
-                  transaction: t,
-                  category: categoryMap[t.categoryId],
-                  onTap: () =>
-                      context.push('/transactions/detail', extra: t),
-                );
-              },
-            ),
-          ),
       ],
     );
   }
 }
 
-// ── Member Strip ──────────────────────────────────────────────────────────────
+// ── Glass Header ──────────────────────────────────────────────────────────────
 
+class _GlassHeader extends StatelessWidget {
+  final DashboardLoaded state;
+  final DashboardCubit cubit;
+  final bool isDark;
+  final double topPadding;
+
+  const _GlassHeader({
+    required this.state,
+    required this.cubit,
+    required this.isDark,
+    required this.topPadding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.white.withValues(alpha: 0.72),
+            border: Border(
+              bottom: BorderSide(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.white.withValues(alpha: 0.6),
+                width: 0.5,
+              ),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: topPadding + 8),
+
+              // ── Title row ─────────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'rExpense',
+                            style: AppTextStyles.headlineMedium.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                          Text(
+                            DateFormat('MMMM y').format(state.selectedMonth),
+                            style: AppTextStyles.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                    _GlassIconButton(
+                      icon: Icons.chevron_left,
+                      onTap: cubit.previousMonth,
+                    ),
+                    const SizedBox(width: 8),
+                    _GlassIconButton(
+                      icon: Icons.chevron_right,
+                      onTap: cubit.nextMonth,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // ── Summary Card ──────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: SummaryCard(
+                  income: state.summary.totalIncome,
+                  expense: state.summary.totalExpense,
+                  periodLabel: DateFormat('MMMM y').format(state.selectedMonth),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // ── Transactions header ───────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Transactions',
+                      style: AppTextStyles.headlineSmall.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    _GlassBadge(
+                      label: '${state.transactions.length} total',
+                      isDark: isDark,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Glass Icon Button ─────────────────────────────────────────────────────────
+
+class _GlassIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _GlassIconButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.white.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.12)
+                    : Colors.white.withValues(alpha: 0.8),
+                width: 0.5,
+              ),
+            ),
+            child: Icon(
+              icon,
+              size: 20,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Glass Badge ───────────────────────────────────────────────────────────────
+
+class _GlassBadge extends StatelessWidget {
+  final String label;
+  final bool isDark;
+
+  const _GlassBadge({required this.label, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.white.withValues(alpha: 0.55),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.white.withValues(alpha: 0.7),
+              width: 0.5,
+            ),
+          ),
+          child: Text(label, style: AppTextStyles.labelSmall),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Empty State ───────────────────────────────────────────────────────────────
+
+class _EmptyTransactions extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.receipt_long_outlined,
+            size: 64,
+            color: Theme.of(context)
+                .colorScheme
+                .onSurface
+                .withValues(alpha: 0.2),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No transactions yet',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.4),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Tap + to add your first transaction',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.3),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Transaction List ──────────────────────────────────────────────────────────
+
+class _TransactionList extends StatelessWidget {
+  final List<Transaction> transactions;
+  final Map<String, dynamic> categoryMap;
+
+  const _TransactionList({
+    required this.transactions,
+    required this.categoryMap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics()),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 120),
+      itemCount: transactions.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final t = transactions[index];
+        return TransactionListItem(
+          transaction: t,
+          category: categoryMap[t.categoryId],
+          onTap: () async {
+            await context.push('/transactions/detail', extra: t);
+          },
+        );
+      },
+    );
+  }
+}
+
+// ── Member Strip (kept for future use) ───────────────────────────────────────
+// ignore: unused_element
 class _MemberStrip extends StatelessWidget {
   final List<Member> members;
   final String? activeMemberId;
@@ -327,134 +417,6 @@ class _MemberStrip extends StatelessWidget {
             ),
           );
         }).toList(),
-      ),
-    );
-  }
-}
-
-// ── Quick Track Row ───────────────────────────────────────────────────────────
-
-class _QuickTrackRow extends StatelessWidget {
-  final List<_QuickTrackDef> items;
-  final String? defaultMemberId;
-
-  const _QuickTrackRow({required this.items, this.defaultMemberId});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: items.map((item) {
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: _QuickTrackButton(
-              def: item,
-              defaultMemberId: defaultMemberId,
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-class _QuickTrackButton extends StatelessWidget {
-  final _QuickTrackDef def;
-  final String? defaultMemberId;
-
-  const _QuickTrackButton({
-    required this.def,
-    this.defaultMemberId,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push(
-        '/transactions/add',
-        extra: {
-          'type': TransactionType.expense,
-          'categoryId': def.categoryId,
-          'memberId': defaultMemberId,
-        },
-      ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: def.color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: def.color.withValues(alpha: 0.2)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(def.emoji, style: const TextStyle(fontSize: 22)),
-            const SizedBox(height: 4),
-            Text(
-              def.label,
-              style: AppTextStyles.labelSmall.copyWith(
-                color: def.color,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _QuickTrackDef {
-  final String categoryId;
-  final String label;
-  final String emoji;
-  final Color color;
-
-  const _QuickTrackDef({
-    required this.categoryId,
-    required this.label,
-    required this.emoji,
-    required this.color,
-  });
-}
-
-// ── Action Button ─────────────────────────────────────────────────────────────
-
-class _ActionButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ActionButton({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: AppTextStyles.labelLarge.copyWith(color: color),
-            ),
-          ],
-        ),
       ),
     );
   }

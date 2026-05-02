@@ -109,6 +109,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
+          physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics()),
           padding: const EdgeInsets.all(20),
           children: [
             // ── Type Toggle ────────────────────────────────────────────────

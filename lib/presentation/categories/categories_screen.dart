@@ -114,6 +114,8 @@ class _CategoryList extends StatelessWidget {
     }
 
     return ListView.separated(
+      physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.all(20),
       itemCount: categories.length,
       separatorBuilder: (_, __) => const SizedBox(height: 8),

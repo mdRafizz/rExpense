@@ -92,6 +92,8 @@ class _MemberList extends StatelessWidget {
     }
 
     return ListView.separated(
+      physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.all(20),
       itemCount: members.length,
       separatorBuilder: (_, __) => const SizedBox(height: 8),

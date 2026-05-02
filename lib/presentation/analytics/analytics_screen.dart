@@ -1,5 +1,6 @@
 // lib/presentation/analytics/analytics_screen.dart
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -62,6 +63,10 @@ class _AnalyticsViewState extends State<_AnalyticsView>
   late int _year;
   late int _month;
 
+  // Track the last month we actually loaded so tab switches don't re-trigger
+  int? _loadedYear;
+  int? _loadedMonth;
+
   @override
   void initState() {
     super.initState();
@@ -69,20 +74,19 @@ class _AnalyticsViewState extends State<_AnalyticsView>
     _year = now.year;
     _month = now.month;
     _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(_onTabChanged);
+    // No listener needed — tab switches no longer reload data
   }
 
   @override
   void dispose() {
-    _tabController
-      ..removeListener(_onTabChanged)
-      ..dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
-  void _onTabChanged() {
-    if (!_tabController.indexIsChanging) return;
-    // Reload analytics for the current month when switching tabs
+  void _loadIfNeeded() {
+    if (_loadedYear == _year && _loadedMonth == _month) return;
+    _loadedYear = _year;
+    _loadedMonth = _month;
     context
         .read<AnalyticsBloc>()
         .add(LoadMonthlyAnalytics(year: _year, month: _month));
@@ -94,9 +98,13 @@ class _AnalyticsViewState extends State<_AnalyticsView>
       _year = dt.year;
       _month = dt.month;
     });
-    context
-        .read<AnalyticsBloc>()
-        .add(LoadMonthlyAnalytics(year: _year, month: _month));
+    _loadIfNeeded();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadIfNeeded();
   }
 
   @override
@@ -129,6 +137,7 @@ class _AnalyticsViewState extends State<_AnalyticsView>
       ),
       body: TabBarView(
         controller: _tabController,
+        physics: const BouncingScrollPhysics(),
         children: [
           _OverviewTab(
             year: _year,
@@ -280,7 +289,9 @@ class _OverviewContent extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 32),
+      physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics()),
+      padding: const EdgeInsets.only(bottom: 120),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -366,6 +377,21 @@ class _OverviewContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
+
+          // ── Daily Expense Chart ────────────────────────────────────────────
+          if (state.dailyExpenses.isNotEmpty) ...[
+            _SectionHeader(title: 'Daily Expenses'),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _DailyExpenseChart(
+                dailyExpenses: state.dailyExpenses,
+                year: year,
+                month: month,
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
 
           // ── 6-Month Trend ──────────────────────────────────────────────────
           if (state.chartData.isNotEmpty) ...[
@@ -497,14 +523,16 @@ class _CategoriesContent extends StatelessWidget {
     final catById = {for (final c in categories) c.id: c};
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 32),
+      physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics()),
+      padding: const EdgeInsets.only(bottom: 120),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _MonthNavHeader(year: year, month: month, onNavigate: onNavigate),
 
           // ── Pie chart ──────────────────────────────────────────────────────
-          _SectionHeader(title: 'Top Spending'),
+          const _SectionHeader(title: 'Top Spending'),
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -643,7 +671,9 @@ class _MembersContent extends StatelessWidget {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 32),
+      physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics()),
+      padding: const EdgeInsets.only(bottom: 120),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -668,6 +698,321 @@ class _MembersContent extends StatelessWidget {
       ),
     );
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Daily Expense Chart
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _DailyExpenseChart extends StatelessWidget {
+  final Map<int, double> dailyExpenses;
+  final int year;
+  final int month;
+
+  const _DailyExpenseChart({
+    required this.dailyExpenses,
+    required this.year,
+    required this.month,
+  });
+
+  // Nice round grid-line values: pick 4 evenly-spaced steps that are
+  // human-readable (multiples of 50, 100, 500, 1000, 5000 …).
+  static List<double> _gridLines(double maxY) {
+    if (maxY <= 0) return [25, 50, 75, 100];
+    // Choose a step size that gives ~4 lines
+    final raw = maxY / 4;
+    final magnitude = math.pow(10, (math.log(raw) / math.ln10).floor());
+    final normalised = raw / magnitude;
+    final step = normalised <= 1.5
+        ? magnitude * 1
+        : normalised <= 3
+            ? magnitude * 2
+            : normalised <= 7
+                ? magnitude * 5
+                : magnitude * 10;
+    final lines = <double>[];
+    double v = step.toDouble();
+    while (v <= maxY * 1.05) {
+      lines.add(v);
+      v += step;
+    }
+    return lines.isEmpty ? [maxY] : lines;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final daysInMonth = DateUtils.getDaysInMonth(year, month);
+
+    final maxY = dailyExpenses.values.fold<double>(0, math.max);
+    final gridLines = _gridLines(maxY);
+    final chartMaxY = gridLines.last * 1.15; // a little headroom above top line
+
+    // Each bar is 18 px wide + 4 px gap — gives enough room to read without
+    // crowding. The chart scrolls horizontally.
+    const barWidth = 18.0;
+    const barSpacing = 6.0; // gap between bars
+    final chartWidth = daysInMonth * (barWidth + barSpacing);
+
+    // Build bar groups
+    final groups = <BarChartGroupData>[];
+    for (int day = 1; day <= daysInMonth; day++) {
+      final amount = dailyExpenses[day] ?? 0.0;
+      groups.add(
+        BarChartGroupData(
+          x: day,
+          barRods: [
+            BarChartRodData(
+              toY: amount,
+              color: amount > 0
+                  ? AppColors.expense
+                  : AppColors.expense.withValues(alpha: 0.12),
+              width: barWidth,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(5),
+              ),
+              backDrawRodData: BackgroundBarChartRodData(
+                show: true,
+                toY: chartMaxY,
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.03)
+                    : Colors.black.withValues(alpha: 0.02),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Left-axis label width — enough for "৳99.9k"
+    const leftReserved = 52.0;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Header ──────────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+            child: Row(
+              children: [
+                _LegendDot(
+                    color: AppColors.expense, label: 'Daily Expense'),
+                const Spacer(),
+                Text(
+                  DateFormat('MMMM y').format(DateTime(year, month)),
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // ── Chart area: fixed-height, left Y-axis + scrollable bars ────
+          SizedBox(
+            height: 220,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ── Y-axis labels (fixed, not scrollable) ─────────────────
+                SizedBox(
+                  width: leftReserved,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    // bottom: space for the day-number row
+                    child: CustomPaint(
+                      painter: _YAxisPainter(
+                        gridLines: gridLines,
+                        chartMaxY: chartMaxY,
+                        textColor: colorScheme.onSurfaceVariant,
+                        isDark: isDark,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ── Scrollable bar chart ───────────────────────────────────
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: SizedBox(
+                      width: chartWidth,
+                      child: BarChart(
+                        BarChartData(
+                          maxY: chartMaxY,
+                          minY: 0,
+                          barGroups: groups,
+                          groupsSpace: barSpacing,
+                          gridData: FlGridData(
+                            show: true,
+                            drawVerticalLine: false,
+                            // Draw a line at each of our nice round values
+                            checkToShowHorizontalLine: (value) =>
+                                gridLines.any((g) => (g - value).abs() < 0.5),
+                            getDrawingHorizontalLine: (_) => FlLine(
+                              color: colorScheme.outlineVariant,
+                              strokeWidth: 1,
+                              dashArray: [4, 4],
+                            ),
+                          ),
+                          borderData: FlBorderData(show: false),
+                          titlesData: FlTitlesData(
+                            leftTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            rightTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            topTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                reservedSize: 24,
+                                getTitlesWidget: (value, meta) {
+                                  final day = value.toInt();
+                                  // Show every 5th day + last day
+                                  if (day % 5 != 1 && day != daysInMonth) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 6),
+                                    child: Text(
+                                      '$day',
+                                      style: AppTextStyles.labelSmall.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                          barTouchData: BarTouchData(
+                            touchTooltipData: BarTouchTooltipData(
+                              fitInsideHorizontally: true,
+                              fitInsideVertically: true,
+                              getTooltipColor: (_) =>
+                                  colorScheme.inverseSurface,
+                              getTooltipItem:
+                                  (group, groupIndex, rod, rodIndex) {
+                                if (rod.toY <= 0) return null;
+                                final day = group.x;
+                                final date = DateTime(year, month, day);
+                                return BarTooltipItem(
+                                  '${DateFormat('MMM d').format(date)}\n'
+                                  '${CurrencyFormatter.full(rod.toY)}',
+                                  AppTextStyles.labelSmall.copyWith(
+                                    color: colorScheme.onInverseSurface,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ── Scroll hint ──────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.swipe_rounded,
+                  size: 12,
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Scroll to see all days · tap bar for amount',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Draws Y-axis labels aligned to the grid lines.
+class _YAxisPainter extends CustomPainter {
+  final List<double> gridLines;
+  final double chartMaxY;
+  final Color textColor;
+  final bool isDark;
+
+  const _YAxisPainter({
+    required this.gridLines,
+    required this.chartMaxY,
+    required this.textColor,
+    required this.isDark,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final value in gridLines) {
+      // Fraction from bottom (0) to top (1)
+      final frac = value / chartMaxY;
+      // Y position: top of canvas = high value, bottom = 0
+      final y = size.height * (1 - frac);
+
+      final label = _formatAmount(value);
+      final tp = TextPainter(
+        text: TextSpan(
+          text: label,
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 9.5,
+            fontWeight: FontWeight.w500,
+            color: textColor,
+          ),
+        ),
+        textDirection: ui.TextDirection.ltr,
+      )..layout(maxWidth: 50);
+
+      // Right-align inside the reserved width
+      tp.paint(
+        canvas,
+        Offset(50 - tp.width - 4, y - tp.height / 2),
+      );
+    }
+  }
+
+  String _formatAmount(double v) {
+    if (v >= 1000000) return '৳${(v / 1000000).toStringAsFixed(1)}M';
+    if (v >= 1000) return '৳${(v / 1000).toStringAsFixed(v % 1000 == 0 ? 0 : 1)}k';
+    return '৳${v.toStringAsFixed(0)}';
+  }
+
+  @override
+  bool shouldRepaint(_YAxisPainter old) =>
+      old.gridLines != gridLines ||
+      old.chartMaxY != chartMaxY ||
+      old.textColor != textColor;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -719,7 +1064,7 @@ class _TrendBarChart extends StatelessWidget {
     });
 
     return Container(
-      height: 200,
+      height: 240,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLow,
@@ -740,7 +1085,7 @@ class _TrendBarChart extends StatelessWidget {
           Expanded(
             child: BarChart(
               BarChartData(
-                maxY: maxY * 1.2,
+                maxY: maxY * 1.45,
                 barGroups: groups,
                 gridData: FlGridData(
                   show: true,
@@ -760,8 +1105,33 @@ class _TrendBarChart extends StatelessWidget {
                   rightTitles: const AxisTitles(
                     sideTitles: SideTitles(showTitles: false),
                   ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+                  // Expense amount label above each group
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 22,
+                      getTitlesWidget: (value, meta) {
+                        final idx = value.toInt();
+                        if (idx < 0 || idx >= sortedKeys.length) {
+                          return const SizedBox.shrink();
+                        }
+                        final expense =
+                            chartData[sortedKeys[idx]]!.totalExpense;
+                        if (expense <= 0) return const SizedBox.shrink();
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 2),
+                          child: Text(
+                            CurrencyFormatter.compact(expense),
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.expense,
+                              fontSize: 8,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        );
+                      },
+                    ),
                   ),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
@@ -791,10 +1161,9 @@ class _TrendBarChart extends StatelessWidget {
                   touchTooltipData: BarTouchTooltipData(
                     getTooltipColor: (_) => colorScheme.inverseSurface,
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                      final label =
-                          rodIndex == 0 ? 'Income' : 'Expense';
+                      final label = rodIndex == 0 ? 'Income' : 'Expense';
                       return BarTooltipItem(
-                        '$label\n${CurrencyFormatter.compact(rod.toY)}',
+                        '$label\n${CurrencyFormatter.full(rod.toY)}',
                         AppTextStyles.labelSmall.copyWith(
                           color: colorScheme.onInverseSurface,
                         ),
@@ -847,11 +1216,13 @@ class _CategoryPieChartState extends State<_CategoryPieChart> {
         PieChartSectionData(
           value: e.value,
           color: color,
-          radius: isTouched ? 72 : 60,
+          radius: isTouched ? 76 : 62,
+          // Show % inside the slice when touched
           title: isTouched ? '${pct.toStringAsFixed(1)}%' : '',
           titleStyle: AppTextStyles.labelSmall.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.w700,
+            fontSize: 11,
           ),
           badgeWidget: null,
         ),
@@ -859,7 +1230,7 @@ class _CategoryPieChartState extends State<_CategoryPieChart> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(10,22,10,10),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
@@ -893,28 +1264,68 @@ class _CategoryPieChartState extends State<_CategoryPieChart> {
                     ),
                   ),
                 ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Total',
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: colorScheme.onSurfaceVariant,
+                // Center label — shows touched item details or total
+                Builder(builder: (context) {
+                  final colorScheme = Theme.of(context).colorScheme;
+                  if (_touchedIndex >= 0 &&
+                      _touchedIndex < widget.entries.length) {
+                    final e = widget.entries[_touchedIndex];
+                    final cat = widget.catById[e.key];
+                    final pct = widget.total > 0
+                        ? (e.value / widget.total * 100)
+                        : 0.0;
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          cat?.name ?? e.key,
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            fontSize: 10,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          CurrencyFormatter.compact(e.value),
+                          style: AppTextStyles.amountMedium.copyWith(
+                            color: colorScheme.onSurface,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          '${pct.toStringAsFixed(1)}%',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Total',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                    Text(
-                      CurrencyFormatter.compact(widget.total),
-                      style: AppTextStyles.amountMedium.copyWith(
-                        color: colorScheme.onSurface,
+                      Text(
+                        CurrencyFormatter.compact(widget.total),
+                        style: AppTextStyles.amountMedium.copyWith(
+                          color: colorScheme.onSurface,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  );
+                }),
               ],
             ),
           ),
           const SizedBox(height: 16),
-          // Legend
+          // Legend — name, amount, percentage
           Wrap(
             spacing: 12,
             runSpacing: 8,
@@ -928,39 +1339,67 @@ class _CategoryPieChartState extends State<_CategoryPieChart> {
               final pct = widget.total > 0
                   ? (e.value / widget.total * 100)
                   : 0.0;
+              final isSelected = _touchedIndex == i;
               return GestureDetector(
                 onTap: () => setState(() {
                   _touchedIndex = _touchedIndex == i ? -1 : i;
                 }),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? color.withValues(alpha: 0.12)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                    border: isSelected
+                        ? Border.all(
+                            color: color.withValues(alpha: 0.3))
+                        : null,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    if (cat != null)
-                      _categoryIconWidget(cat.icon, color, 14),
-                    const SizedBox(width: 2),
-                    Text(
-                      cat?.name ?? e.key,
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: colorScheme.onSurface,
+                      const SizedBox(width: 4),
+                      if (cat != null) ...[
+                        _categoryIconWidget(cat.icon, color, 13),
+                        const SizedBox(width: 3),
+                      ],
+                      Text(
+                        cat?.name ?? e.key,
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: colorScheme.onSurface,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${pct.toStringAsFixed(1)}%',
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: colorScheme.onSurfaceVariant,
+                      const SizedBox(width: 4),
+                      Text(
+                        CurrencyFormatter.compact(e.value),
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: color,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 3),
+                      Text(
+                        '(${pct.toStringAsFixed(1)}%)',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             }),

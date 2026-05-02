@@ -8,6 +8,7 @@ import '../../application/category/category_cubit.dart';
 import '../../core/di/injection.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../domain/repositories/transaction_repository.dart';
 import '../widgets/category_icon_widget.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../domain/entities/transaction.dart';
@@ -34,20 +35,46 @@ class TransactionDetailScreen extends StatelessWidget {
   }
 }
 
-class _DetailView extends StatelessWidget {
+class _DetailView extends StatefulWidget {
   final Transaction transaction;
 
   const _DetailView({required this.transaction});
 
   @override
+  State<_DetailView> createState() => _DetailViewState();
+}
+
+class _DetailViewState extends State<_DetailView> {
+  late Transaction _transaction;
+
+  @override
+  void initState() {
+    super.initState();
+    _transaction = widget.transaction;
+  }
+
+  Future<void> _openEdit() async {
+    await context.push('/transactions/edit', extra: _transaction);
+    // After returning from edit, reload the transaction from the repository
+    if (!mounted) return;
+    final result = await sl<TransactionRepository>().getById(_transaction.id);
+    result.fold(
+      (_) {}, // ignore error — stream will update dashboard anyway
+      (updated) {
+        if (mounted) setState(() => _transaction = updated);
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isIncome = transaction.isIncome;
+    final isIncome = _transaction.isIncome;
     final color = isIncome ? AppColors.income : AppColors.expense;
 
     final categoryState = context.watch<CategoryCubit>().state;
     final category = categoryState is CategoryLoaded
         ? categoryState.categories
-            .where((c) => c.id == transaction.categoryId)
+            .where((c) => c.id == _transaction.categoryId)
             .firstOrNull
         : null;
 
@@ -57,10 +84,7 @@ class _DetailView extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
-            onPressed: () => context.push(
-              '/transactions/edit',
-              extra: transaction,
-            ),
+            onPressed: _openEdit,
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline, color: AppColors.danger),
@@ -93,7 +117,7 @@ class _DetailView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              '${isIncome ? '+' : '-'}${CurrencyFormatter.full(transaction.amount)}',
+              '${isIncome ? '+' : '-'}${CurrencyFormatter.full(_transaction.amount)}',
               style: AppTextStyles.amountHero.copyWith(color: color),
             ),
             const SizedBox(height: 8),
@@ -132,19 +156,19 @@ class _DetailView extends StatelessWidget {
                   _DetailRow(
                     label: 'Date',
                     value: DateFormat('EEEE, MMMM d, y')
-                        .format(transaction.date),
+                        .format(_transaction.date),
                     iconWidget: Icon(
                       Icons.calendar_today_outlined,
                       size: 18,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  if (transaction.note != null &&
-                      transaction.note!.isNotEmpty) ...[
+                  if (_transaction.note != null &&
+                      _transaction.note!.isNotEmpty) ...[
                     const Divider(height: 24),
                     _DetailRow(
                       label: 'Note',
-                      value: transaction.note!,
+                      value: _transaction.note!,
                       iconWidget: Icon(
                         Icons.notes_outlined,
                         size: 18,
@@ -156,7 +180,7 @@ class _DetailView extends StatelessWidget {
                   _DetailRow(
                     label: 'Added',
                     value: DateFormat('MMM d, y · h:mm a')
-                        .format(transaction.createdAt),
+                        .format(_transaction.createdAt),
                     iconWidget: Icon(
                       Icons.access_time_outlined,
                       size: 18,
@@ -194,7 +218,7 @@ class _DetailView extends StatelessWidget {
       ),
     );
     if (confirmed == true && context.mounted) {
-      context.read<TransactionCubit>().deleteTransaction(transaction.id);
+      context.read<TransactionCubit>().deleteTransaction(_transaction.id);
     }
   }
 }

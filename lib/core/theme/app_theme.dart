@@ -157,7 +157,7 @@ class AppTheme {
 
       // Bottom Navigation
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        backgroundColor: Colors.transparent,
         indicatorColor: AppColors.primary.withValues(alpha: 0.12),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
@@ -183,6 +183,9 @@ class AppTheme {
                 : AppColors.textSecondaryLight,
           );
         }),
+        indicatorShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
         elevation: 0,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,

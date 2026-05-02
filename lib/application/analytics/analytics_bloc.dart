@@ -116,6 +116,18 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
       }
     }
 
+    // Daily expense breakdown for the current month
+    final dailyExpenses = <int, double>{};
+    final txnsResult = await _transactionRepository.getByDateRange(currentStart, currentEnd);
+    if (txnsResult.isRight) {
+      for (final t in txnsResult.right) {
+        if (!t.isIncome) {
+          final day = t.date.day;
+          dailyExpenses[day] = (dailyExpenses[day] ?? 0) + t.amount;
+        }
+      }
+    }
+
     AppLogger.i(_tag, '_onLoadMonthly() complete');
     emit(MonthlyAnalyticsLoaded(
       year: year,
@@ -126,6 +138,7 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
       suggestions: leaksResult.isRight ? leaksResult.right : [],
       expenseByMember: expenseByMember,
       expenseByCategoryPerMember: expenseByCategoryPerMember,
+      dailyExpenses: dailyExpenses,
     ));
   }
 

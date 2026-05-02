@@ -103,6 +103,12 @@ class SyncCubit extends Cubit<SyncState> {
   }
 
   Future<void> triggerAutoBackupIfDue() async {
+    // Only attempt auto-backup if the user is already signed in
+    final email = await _repository.getSignedInEmail();
+    if (email == null) {
+      AppLogger.i(_tag, 'triggerAutoBackupIfDue() → skipped (not signed in)');
+      return;
+    }
     final lastBackup = await _repository.getLastBackupTime();
     final isDue = lastBackup == null ||
         DateTime.now().difference(lastBackup).inHours >= 24;

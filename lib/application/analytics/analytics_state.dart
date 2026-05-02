@@ -30,6 +30,9 @@ final class MonthlyAnalyticsLoaded extends AnalyticsState {
   /// Outer key = memberId, inner key = categoryId.
   final Map<String, Map<String, double>> expenseByCategoryPerMember;
 
+  /// Daily expense totals for the current month (day-of-month -> amount).
+  final Map<int, double> dailyExpenses;
+
   const MonthlyAnalyticsLoaded({
     required this.year,
     required this.month,
@@ -39,6 +42,7 @@ final class MonthlyAnalyticsLoaded extends AnalyticsState {
     required this.suggestions,
     required this.expenseByMember,
     required this.expenseByCategoryPerMember,
+    this.dailyExpenses = const {},
   });
 
   @override
@@ -51,6 +55,7 @@ final class MonthlyAnalyticsLoaded extends AnalyticsState {
         suggestions,
         expenseByMember,
         expenseByCategoryPerMember,
+        dailyExpenses,
       ];
 }
 
