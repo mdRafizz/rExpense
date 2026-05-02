@@ -8,6 +8,7 @@ import '../../presentation/transactions/add_transaction_screen.dart';
 import '../../presentation/transactions/transaction_detail_screen.dart';
 import '../../presentation/categories/categories_screen.dart';
 import '../../presentation/categories/category_form_screen.dart';
+import '../../presentation/members/members_screen.dart';
 import '../../presentation/settings/settings_screen.dart';
 import '../../domain/entities/transaction.dart';
 import '../../domain/entities/category.dart';
@@ -25,72 +26,68 @@ final appRouter = GoRouter(
       routes: [
         GoRoute(
           path: '/dashboard',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: DashboardScreen(),
-          ),
+          pageBuilder: (_, __) =>
+              const NoTransitionPage(child: DashboardScreen()),
         ),
         GoRoute(
           path: '/analytics',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: AnalyticsScreen(),
-          ),
+          pageBuilder: (_, __) =>
+              const NoTransitionPage(child: AnalyticsScreen()),
         ),
         GoRoute(
           path: '/categories',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: CategoriesScreen(),
-          ),
+          pageBuilder: (_, __) =>
+              const NoTransitionPage(child: CategoriesScreen()),
           routes: [
             GoRoute(
               path: 'new',
               parentNavigatorKey: _rootNavigatorKey,
-              builder: (context, state) => const CategoryFormScreen(),
+              builder: (_, __) => const CategoryFormScreen(),
             ),
             GoRoute(
               path: 'edit',
               parentNavigatorKey: _rootNavigatorKey,
-              builder: (context, state) {
-                final category = state.extra as Category;
-                return CategoryFormScreen(category: category);
-              },
+              builder: (_, state) =>
+                  CategoryFormScreen(category: state.extra as Category),
             ),
           ],
         ),
         GoRoute(
+          path: '/members',
+          pageBuilder: (_, __) =>
+              const NoTransitionPage(child: MembersScreen()),
+        ),
+        GoRoute(
           path: '/settings',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: SettingsScreen(),
-          ),
+          pageBuilder: (_, __) =>
+              const NoTransitionPage(child: SettingsScreen()),
         ),
       ],
     ),
 
-    // Full-screen routes (outside shell)
+    // ── Full-screen routes (outside shell) ────────────────────────────────
     GoRoute(
       path: '/transactions/add',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) {
+      builder: (_, state) {
         final extra = state.extra as Map<String, dynamic>?;
         return AddTransactionScreen(
           initialType: extra?['type'] as TransactionType?,
+          initialCategoryId: extra?['categoryId'] as String?,
         );
       },
     ),
     GoRoute(
       path: '/transactions/edit',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) {
-        final transaction = state.extra as Transaction;
-        return AddTransactionScreen(existingTransaction: transaction);
-      },
+      builder: (_, state) =>
+          AddTransactionScreen(existingTransaction: state.extra as Transaction),
     ),
     GoRoute(
       path: '/transactions/detail',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) {
-        final transaction = state.extra as Transaction;
-        return TransactionDetailScreen(transaction: transaction);
-      },
+      builder: (_, state) =>
+          TransactionDetailScreen(transaction: state.extra as Transaction),
     ),
   ],
 );

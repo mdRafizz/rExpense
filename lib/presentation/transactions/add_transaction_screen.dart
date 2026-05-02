@@ -6,20 +6,26 @@ import 'package:intl/intl.dart';
 
 import '../../application/transaction/transaction_cubit.dart';
 import '../../application/category/category_cubit.dart';
+import '../../application/member/member_cubit.dart';
 import '../../core/di/injection.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../domain/entities/transaction.dart';
+import '../../domain/entities/member.dart';
 import '../widgets/category_chip.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final TransactionType? initialType;
   final Transaction? existingTransaction;
 
+  /// Pre-selected category id (used by quick-track buttons).
+  final String? initialCategoryId;
+
   const AddTransactionScreen({
     super.key,
     this.initialType,
     this.existingTransaction,
+    this.initialCategoryId,
   });
 
   @override
@@ -31,6 +37,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
   String? _selectedCategoryId;
+  String? _selectedMemberId;
   late DateTime _selectedDate;
   final _formKey = GlobalKey<FormState>();
 
@@ -42,13 +49,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     _type = widget.initialType ??
         widget.existingTransaction?.type ??
         TransactionType.expense;
-    _selectedDate =
-        widget.existingTransaction?.date ?? DateTime.now();
+    _selectedDate = widget.existingTransaction?.date ?? DateTime.now();
+    _selectedCategoryId =
+        widget.initialCategoryId ?? widget.existingTransaction?.categoryId;
+
     if (_isEditing) {
       _amountController.text =
           widget.existingTransaction!.amount.toStringAsFixed(2);
       _noteController.text = widget.existingTransaction!.note ?? '';
-      _selectedCategoryId = widget.existingTransaction!.categoryId;
+      _selectedMemberId = widget.existingTransaction!.memberId;
+    } else {
+      // Default to the active member (Family)
+      _selectedMemberId = sl<MemberCubit>().effectiveMemberId;
     }
   }
 
@@ -65,12 +77,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       providers: [
         BlocProvider(create: (_) => sl<TransactionCubit>()),
         BlocProvider.value(value: sl<CategoryCubit>()),
+        BlocProvider.value(value: sl<MemberCubit>()),
       ],
       child: BlocListener<TransactionCubit, TransactionState>(
         listener: (context, state) {
-          if (state is TransactionSuccess) {
-            context.pop();
-          } else if (state is TransactionError) {
+          if (state is TransactionSuccess) context.pop();
+          if (state is TransactionError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -105,11 +117,27 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             ),
             const SizedBox(height: 24),
 
+            // ── Member Selector ────────────────────────────────────────────
+            const Text('For', style: AppTextStyles.labelLarge),
+            const SizedBox(height: 10),
+            BlocBuilder<MemberCubit, MemberState>(
+              builder: (context, state) {
+                if (state is! MemberLoaded) return const SizedBox.shrink();
+                return _MemberSelector(
+                  members: state.members,
+                  selectedId: _selectedMemberId,
+                  onChanged: (id) => setState(() => _selectedMemberId = id),
+                );
+              },
+            ),
+            const SizedBox(height: 24),
+
             // ── Amount ─────────────────────────────────────────────────────
             Text('Amount', style: AppTextStyles.labelLarge),
             const SizedBox(height: 8),
             TextFormField(
               controller: _amountController,
+              autofocus: widget.initialCategoryId != null,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
@@ -121,7 +149,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     : AppColors.expense,
               ),
               decoration: InputDecoration(
-                prefixText: '\$ ',
+                prefixText: '৳ ',
                 prefixStyle: AppTextStyles.amountLarge.copyWith(
                   color: Theme.of(context)
                       .colorScheme
@@ -145,7 +173,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             BlocBuilder<CategoryCubit, CategoryState>(
               builder: (context, state) {
                 if (state is! CategoryLoaded) {
-                  return const CircularProgressIndicator();
+                  return const Center(child: CircularProgressIndicator());
                 }
                 return Wrap(
                   spacing: 8,
@@ -155,9 +183,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         (cat) => CategoryChip(
                           category: cat,
                           selected: _selectedCategoryId == cat.id,
-                          onTap: () => setState(
-                            () => _selectedCategoryId = cat.id,
-                          ),
+                          onTap: () =>
+                              setState(() => _selectedCategoryId = cat.id),
                         ),
                       )
                       .toList(),
@@ -169,9 +196,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
                   'Please select a category',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.danger,
-                  ),
+                  style: AppTextStyles.bodySmall
+                      .copyWith(color: AppColors.danger),
                 ),
               ),
             const SizedBox(height: 24),
@@ -219,9 +245,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             TextFormField(
               controller: _noteController,
               maxLines: 3,
-              decoration: const InputDecoration(
-                hintText: 'Add a note...',
-              ),
+              decoration: const InputDecoration(hintText: 'Add a note...'),
             ),
             const SizedBox(height: 32),
 
@@ -244,6 +268,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 );
               },
             ),
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -263,7 +288,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   void _submit(BuildContext context) {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCategoryId == null) {
-      setState(() {}); // trigger rebuild to show category error
+      setState(() {});
       return;
     }
 
@@ -276,6 +301,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           amount: amount,
           type: _type,
           categoryId: _selectedCategoryId,
+          memberId: _selectedMemberId,
           note: _noteController.text.isEmpty ? null : _noteController.text,
           date: _selectedDate,
         ),
@@ -285,12 +311,80 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         amount: amount,
         type: _type,
         categoryId: _selectedCategoryId!,
+        memberId: _selectedMemberId,
         note: _noteController.text.isEmpty ? null : _noteController.text,
         date: _selectedDate,
       );
     }
   }
 }
+
+// ── Member Selector ───────────────────────────────────────────────────────────
+
+class _MemberSelector extends StatelessWidget {
+  final List<Member> members;
+  final String? selectedId;
+  final ValueChanged<String?> onChanged;
+
+  const _MemberSelector({
+    required this.members,
+    required this.selectedId,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: members.map((member) {
+          final isSelected = member.id == selectedId;
+          final color = Color(member.color);
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: GestureDetector(
+              onTap: () => onChanged(member.id),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? color.withValues(alpha: 0.15)
+                      : Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isSelected ? color : Colors.transparent,
+                    width: 1.5,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(member.emoji, style: const TextStyle(fontSize: 16)),
+                    const SizedBox(width: 6),
+                    Text(
+                      member.name,
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: isSelected
+                            ? color
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+// ── Type Toggle ───────────────────────────────────────────────────────────────
 
 class _TypeToggle extends StatelessWidget {
   final TransactionType selected;
@@ -352,7 +446,9 @@ class _ToggleOption extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? color.withValues(alpha: 0.12) : Colors.transparent,
+            color: isSelected
+                ? color.withValues(alpha: 0.12)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Row(

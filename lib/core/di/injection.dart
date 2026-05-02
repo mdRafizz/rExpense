@@ -7,11 +7,13 @@ import '../../data/repositories/category_repository_impl.dart';
 import '../../data/repositories/transaction_repository_impl.dart';
 import '../../data/repositories/budget_repository_impl.dart';
 import '../../data/repositories/sync_repository_impl.dart';
+import '../../data/repositories/member_repository_impl.dart';
 
 import '../../domain/repositories/category_repository.dart';
 import '../../domain/repositories/transaction_repository.dart';
 import '../../domain/repositories/budget_repository.dart';
 import '../../domain/repositories/sync_repository.dart';
+import '../../domain/repositories/member_repository.dart';
 
 import '../../domain/usecases/manage_categories.dart';
 import '../../domain/usecases/calculate_variance.dart';
@@ -23,15 +25,14 @@ import '../../application/transaction/transaction_cubit.dart';
 import '../../application/category/category_cubit.dart';
 import '../../application/analytics/analytics_bloc.dart';
 import '../../application/sync/sync_cubit.dart';
+import '../../application/member/member_cubit.dart';
 
 final sl = GetIt.instance;
 
 Future<void> configureDependencies() async {
   // ── External ───────────────────────────────────────────────────────────────
   sl.registerLazySingleton<GoogleSignIn>(
-    () => GoogleSignIn(
-      scopes: [DriveApi.driveAppdataScope],
-    ),
+    () => GoogleSignIn(scopes: [DriveApi.driveAppdataScope]),
   );
 
   // ── Database ───────────────────────────────────────────────────────────────
@@ -48,10 +49,10 @@ Future<void> configureDependencies() async {
     () => BudgetRepositoryImpl(sl()),
   );
   sl.registerLazySingleton<SyncRepository>(
-    () => SyncRepositoryImpl(
-      googleSignIn: sl(),
-      db: sl(),
-    ),
+    () => SyncRepositoryImpl(googleSignIn: sl(), db: sl()),
+  );
+  sl.registerLazySingleton<MemberRepository>(
+    () => MemberRepositoryImpl(sl()),
   );
 
   // ── Use Cases ─────────────────────────────────────────────────────────────
@@ -72,4 +73,7 @@ Future<void> configureDependencies() async {
     ),
   );
   sl.registerLazySingleton(() => SyncCubit(sl()));
+
+  // Singleton so member selection persists across screens
+  sl.registerLazySingleton(() => MemberCubit(sl()));
 }

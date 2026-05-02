@@ -1,8 +1,7 @@
+import 'package:drift/drift.dart';
 import '../../domain/entities/transaction.dart';
 import '../local/database/app_database.dart';
-import 'package:drift/drift.dart';
 
-/// Maps between Drift data classes and domain Transaction entities.
 class TransactionMapper {
   const TransactionMapper._();
 
@@ -13,6 +12,7 @@ class TransactionMapper {
             ? TransactionType.income
             : TransactionType.expense,
         categoryId: data.categoryId,
+        memberId: data.memberId,
         note: data.note,
         date: data.date,
         createdAt: data.createdAt,
@@ -23,8 +23,11 @@ class TransactionMapper {
       TransactionsTableCompanion(
         id: Value(entity.id),
         amount: Value(entity.amount),
-        type: Value(entity.type == TransactionType.income ? 'income' : 'expense'),
+        type: Value(
+          entity.type == TransactionType.income ? 'income' : 'expense',
+        ),
         categoryId: Value(entity.categoryId),
+        memberId: Value(entity.memberId),
         note: Value(entity.note),
         date: Value(entity.date),
         createdAt: Value(entity.createdAt),

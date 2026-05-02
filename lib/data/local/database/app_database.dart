@@ -6,31 +6,39 @@ import 'package:path/path.dart' as p;
 import 'tables/categories_table.dart';
 import 'tables/transactions_table.dart';
 import 'tables/budgets_table.dart';
+import 'tables/members_table.dart';
 import 'daos/category_dao.dart';
 import 'daos/transaction_dao.dart';
 import 'daos/budget_dao.dart';
+import 'daos/member_dao.dart';
 
 part 'app_database.g.dart';
 
-/// The single Drift database instance for the application.
 @DriftDatabase(
-  tables: [CategoriesTable, TransactionsTable, BudgetsTable],
-  daos: [CategoryDao, TransactionDao, BudgetDao],
+  tables: [CategoriesTable, TransactionsTable, BudgetsTable, MembersTable],
+  daos: [CategoryDao, TransactionDao, BudgetDao, MemberDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) async {
           await m.createAll();
-          await _seedDefaultCategories();
+          await _seedMembers();
+          await _seedCategories();
         },
         onUpgrade: (m, from, to) async {
-          // Future migrations go here
+          if (from < 2) {
+            // Add members table
+            await m.createTable(membersTable);
+            // Add memberId column to transactions (nullable, no default needed)
+            await m.addColumn(transactionsTable, transactionsTable.memberId);
+            await _seedMembers();
+          }
         },
       );
 
@@ -38,91 +46,134 @@ class AppDatabase extends _$AppDatabase {
     return driftDatabase(name: 'rexpense_db');
   }
 
-  /// Returns the path to the underlying SQLite file for backup purposes.
   Future<String> getDatabasePath() async {
     final dir = await getApplicationDocumentsDirectory();
     return p.join(dir.path, 'rexpense_db.sqlite');
   }
 
-  Future<void> _seedDefaultCategories() async {
+  // ── Members seed ───────────────────────────────────────────────────────────
+
+  Future<void> _seedMembers() async {
     final now = DateTime.now();
-    final defaults = [
-      CategoriesTableCompanion.insert(
-        id: 'cat_food',
-        name: 'Food & Dining',
-        color: 0xFFFF6584,
-        icon: 'e56c', // restaurant
-        isUnnecessary: const Value(false),
+    final members = [
+      MembersTableCompanion.insert(
+        id: 'member_family',
+        name: 'Family',
+        emoji: '👨‍👩‍👧‍👦',
+        color: 0xFF6C63FF,
+        isDefault: const Value(true),
         createdAt: now,
-        updatedAt: now,
       ),
-      CategoriesTableCompanion.insert(
-        id: 'cat_transport',
-        name: 'Transport',
+      MembersTableCompanion.insert(
+        id: 'member_personal',
+        name: 'Personal',
+        emoji: '👤',
         color: 0xFF3A86FF,
-        icon: 'e531', // directions_car
-        isUnnecessary: const Value(false),
+        isDefault: const Value(false),
         createdAt: now,
-        updatedAt: now,
       ),
-      CategoriesTableCompanion.insert(
-        id: 'cat_shopping',
-        name: 'Shopping',
-        color: 0xFF8338EC,
-        icon: 'e8cc', // shopping_bag
-        isUnnecessary: const Value(true),
+      MembersTableCompanion.insert(
+        id: 'member_wife',
+        name: 'Wife',
+        emoji: '👩',
+        color: 0xFFFF6584,
+        isDefault: const Value(false),
         createdAt: now,
-        updatedAt: now,
       ),
-      CategoriesTableCompanion.insert(
-        id: 'cat_entertainment',
-        name: 'Entertainment',
+      MembersTableCompanion.insert(
+        id: 'member_child',
+        name: 'Child',
+        emoji: '👦',
         color: 0xFFFFBE0B,
-        icon: 'e02c', // movie
-        isUnnecessary: const Value(true),
+        isDefault: const Value(false),
         createdAt: now,
-        updatedAt: now,
-      ),
-      CategoriesTableCompanion.insert(
-        id: 'cat_health',
-        name: 'Health',
-        color: 0xFF43B89C,
-        icon: 'e548', // favorite
-        isUnnecessary: const Value(false),
-        createdAt: now,
-        updatedAt: now,
-      ),
-      CategoriesTableCompanion.insert(
-        id: 'cat_coffee',
-        name: 'Coffee',
-        color: 0xFFFF9F1C,
-        icon: 'e541', // local_cafe
-        isUnnecessary: const Value(true),
-        createdAt: now,
-        updatedAt: now,
-      ),
-      CategoriesTableCompanion.insert(
-        id: 'cat_salary',
-        name: 'Salary',
-        color: 0xFF06D6A0,
-        icon: 'e227', // account_balance_wallet
-        isUnnecessary: const Value(false),
-        createdAt: now,
-        updatedAt: now,
-      ),
-      CategoriesTableCompanion.insert(
-        id: 'cat_utilities',
-        name: 'Utilities',
-        color: 0xFF118AB2,
-        icon: 'e1ff', // home
-        isUnnecessary: const Value(false),
-        createdAt: now,
-        updatedAt: now,
       ),
     ];
+    for (final m in members) {
+      await into(membersTable).insertOnConflictUpdate(m);
+    }
+  }
 
-    for (final cat in defaults) {
-      await into(categoriesTable).insertOnConflictUpdate(cat);
+  // ── Categories seed ────────────────────────────────────────────────────────
+  // Icon codepoints are Material Icons font hex values.
+  // Verified against MaterialIcons-Regular.ttf glyph map.
+
+  Future<void> _seedCategories() async {
+    final now = DateTime.now();
+
+    // Helper to build a companion cleanly
+    CategoriesTableCompanion cat(
+      String id,
+      String name,
+      int color,
+      String icon, {
+      bool unnecessary = false,
+    }) =>
+        CategoriesTableCompanion.insert(
+          id: id,
+          name: name,
+          color: color,
+          icon: icon,
+          isUnnecessary: Value(unnecessary),
+          createdAt: now,
+          updatedAt: now,
+        );
+
+    final categories = [
+      // ── Daily essentials ──────────────────────────────────────────────────
+      cat('cat_groceries',    'Groceries',     0xFF43B89C, 'e556'), // local_grocery_store
+      cat('cat_medicine',     'Medicine',      0xFFEF476F, 'e1bc'), // medication
+      cat('cat_food',         'Food',          0xFFFF6584, 'e56c'), // restaurant
+      cat('cat_transport',    'Transport',     0xFF3A86FF, 'e531'), // directions_car
+
+      // ── Protein sub-group ─────────────────────────────────────────────────
+      cat('cat_protein',      'Protein',       0xFFFF9F1C, 'e533'), // egg (directions_run fallback)
+      // Note: egg icon = 0xf06e3 in newer Material; using local_dining as proxy
+      cat('cat_egg',          'Egg',           0xFFFFBE0B, 'e56c'), // restaurant (egg proxy)
+      cat('cat_meat',         'Meat / Fish',   0xFFFF6B6B, 'e533'), // set_meal proxy
+
+      // ── Staples ───────────────────────────────────────────────────────────
+      cat('cat_staples',      'Staples',       0xFF8338EC, 'e544'), // local_florist proxy → grain
+      // Rice, ata, flour etc.
+
+      // ── Bills & utilities ─────────────────────────────────────────────────
+      cat('cat_electricity',  'Electricity',   0xFFFFBE0B, 'e63e'), // bolt / electric_bolt
+      cat('cat_rent',         'Rent',          0xFF118AB2, 'e88a'), // home
+      cat('cat_internet',     'Internet',      0xFF3A86FF, 'e63e'), // wifi proxy
+      cat('cat_mobile',       'Mobile',        0xFF6C63FF, 'e325'), // smartphone
+      cat('cat_utilities',    'Utilities',     0xFF06D6A0, 'e1ff'), // build / settings
+
+      // ── Finance ───────────────────────────────────────────────────────────
+      cat('cat_lend',         'Lend',          0xFF43B89C, 'e8b3'), // send_money proxy → payments
+      cat('cat_borrow',       'Borrow',        0xFFEF476F, 'e8b3'), // payments
+      cat('cat_salary',       'Salary',        0xFF06D6A0, 'e227'), // account_balance_wallet
+      cat('cat_subscription', 'Subscription',  0xFF8338EC, 'e8f9'), // subscriptions
+
+      // ── Health ────────────────────────────────────────────────────────────
+      cat('cat_health',       'Health',        0xFFEF476F, 'e548'), // favorite / health
+      // doctor visits, tests — medicine is separate
+
+      // ── Lifestyle ─────────────────────────────────────────────────────────
+      cat('cat_shopping',     'Shopping',      0xFF8338EC, 'e8cc', unnecessary: true), // shopping_bag
+      cat('cat_entertainment','Entertainment', 0xFFFFBE0B, 'e02c', unnecessary: true), // movie
+      cat('cat_personal',     'Personal',      0xFF3A86FF, 'e7fd'), // person
+      cat('cat_education',    'Education',     0xFF118AB2, 'e80c'), // school
+      cat('cat_travel',       'Travel',        0xFF43B89C, 'e332'), // flight
+
+      // ── Social ────────────────────────────────────────────────────────────
+      cat('cat_family',       'Family',        0xFF6C63FF, 'e7fb'), // group
+      cat('cat_gift',         'Gift',          0xFFFF6584, 'e8f6', unnecessary: true), // card_giftcard
+      cat('cat_charity',      'Charity',       0xFF06D6A0, 'e8d1'), // volunteer_activism proxy
+
+      // ── Home ──────────────────────────────────────────────────────────────
+      cat('cat_maintenance',  'Maintenance',   0xFF118AB2, 'e869'), // build / home_repair_service
+
+      // ── Fallback ──────────────────────────────────────────────────────────
+      cat('cat_others',       'Others',        0xFF9CA3AF, 'e8b8'), // more_horiz
+    ];
+
+    for (final c in categories) {
+      await into(categoriesTable).insertOnConflictUpdate(c);
     }
   }
 }

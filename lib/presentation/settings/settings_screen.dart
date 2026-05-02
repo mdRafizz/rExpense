@@ -128,31 +128,31 @@ class _CloudSyncCard extends StatelessWidget {
             ],
           ),
 
-          if (state is SyncIdle && (state as SyncIdle).lastBackupTime != null)
+          if (state case SyncIdle(lastBackupTime: final t?))
             Padding(
               padding: const EdgeInsets.only(top: 12),
               child: Text(
-                'Last backup: ${DateFormat('MMM d, y · h:mm a').format((state as SyncIdle).lastBackupTime!)}',
+                'Last backup: ${DateFormat('MMM d, y · h:mm a').format(t)}',
                 style: AppTextStyles.labelSmall,
               ),
             ),
 
-          if (state is SyncSuccess)
+          if (state case SyncSuccess(:final message))
             Padding(
               padding: const EdgeInsets.only(top: 12),
               child: Text(
-                (state as SyncSuccess).message,
+                message,
                 style: AppTextStyles.bodySmall.copyWith(
                   color: AppColors.success,
                 ),
               ),
             ),
 
-          if (state is SyncError)
+          if (state case SyncError(:final message))
             Padding(
               padding: const EdgeInsets.only(top: 12),
               child: Text(
-                (state as SyncError).message,
+                message,
                 style: AppTextStyles.bodySmall.copyWith(
                   color: AppColors.danger,
                 ),
@@ -163,65 +163,66 @@ class _CloudSyncCard extends StatelessWidget {
           const Divider(),
           const SizedBox(height: 12),
 
-          // Actions
-          if (state is SyncIdle && !((state as SyncIdle).isSignedIn))
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: cubit.signIn,
-                icon: const Icon(Icons.login, size: 18),
-                label: const Text('Sign in with Google'),
-              ),
-            )
-          else if (state is SyncIdle || state is SyncSuccess) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: cubit.backup,
-                    icon: const Icon(Icons.backup_outlined, size: 18),
-                    label: const Text('Backup Now'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _confirmRestore(context, cubit),
-                    icon: const Icon(Icons.restore, size: 18),
-                    label: const Text('Restore'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: cubit.signOut,
-                child: Text(
-                  'Sign Out',
-                  style: TextStyle(color: AppColors.danger),
+          // Actions — exhaustive switch so every state renders something
+          switch (state) {
+            SyncLoading(:final message) => Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(message, style: AppTextStyles.bodySmall),
+                  ],
                 ),
               ),
-            ),
-          ] else if (state is SyncLoading)
-            Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+            SyncInitial() || SyncIdle(isSignedIn: false) => SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: cubit.signIn,
+                  icon: const Icon(Icons.login, size: 18),
+                  label: const Text('Sign in with Google'),
+                ),
+              ),
+            // Signed-in idle, success, or error — show backup controls
+            _ => Column(
                 children: [
-                  const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: cubit.backup,
+                          icon: const Icon(Icons.backup_outlined, size: 18),
+                          label: const Text('Backup Now'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _confirmRestore(context, cubit),
+                          icon: const Icon(Icons.restore, size: 18),
+                          label: const Text('Restore'),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    (state as SyncLoading).message,
-                    style: AppTextStyles.bodySmall,
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton(
+                      onPressed: cubit.signOut,
+                      child: const Text(
+                        'Sign Out',
+                        style: TextStyle(color: AppColors.danger),
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
+          },
         ],
       ),
     );
@@ -232,9 +233,10 @@ class _CloudSyncCard extends StatelessWidget {
           'Signed in as $email',
         SyncIdle() => 'Not signed in',
         SyncLoading(:final message) => message,
+        SyncSuccess(signedInEmail: final email?) => 'Signed in as $email',
         SyncSuccess() => 'Backup successful',
-        SyncError() => 'Error occurred',
-        _ => '',
+        SyncError(:final message) => message,
+        SyncInitial() => 'Checking sign-in status...',
       };
 
   Color _statusColor(SyncState state) => switch (state) {
