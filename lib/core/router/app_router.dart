@@ -53,11 +53,6 @@ final appRouter = GoRouter(
           ],
         ),
         GoRoute(
-          path: '/members',
-          pageBuilder: (_, __) =>
-              const NoTransitionPage(child: MembersScreen()),
-        ),
-        GoRoute(
           path: '/settings',
           pageBuilder: (_, __) =>
               const NoTransitionPage(child: SettingsScreen()),
@@ -66,6 +61,22 @@ final appRouter = GoRouter(
     ),
 
     // ── Full-screen routes (outside shell) ────────────────────────────────
+    GoRoute(
+      path: '/categories/new',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (_, __) => const CategoryFormScreen(),
+    ),
+    GoRoute(
+      path: '/categories/edit',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (_, state) =>
+          CategoryFormScreen(category: state.extra as Category),
+    ),
+    GoRoute(
+      path: '/members',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (_, __) => const MembersScreen(),
+    ),
     GoRoute(
       path: '/transactions/add',
       parentNavigatorKey: _rootNavigatorKey,

@@ -59,7 +59,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       _noteController.text = widget.existingTransaction!.note ?? '';
       _selectedMemberId = widget.existingTransaction!.memberId;
     } else {
-      // Default to the active member (Family)
+      // For expenses default to the active member (Family).
+      // Income has no member — it's category-only.
       _selectedMemberId = sl<MemberCubit>().effectiveMemberId;
     }
   }
@@ -113,24 +114,44 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             // ── Type Toggle ────────────────────────────────────────────────
             _TypeToggle(
               selected: _type,
-              onChanged: (t) => setState(() => _type = t),
+              onChanged: (t) => setState(() {
+                _type = t;
+                // Income is member-independent; reset member for income
+                if (t == TransactionType.income) {
+                  _selectedMemberId = null;
+                } else {
+                  // Restore default member for expense
+                  _selectedMemberId ??= sl<MemberCubit>().effectiveMemberId;
+                }
+              }),
             ),
             const SizedBox(height: 24),
 
-            // ── Member Selector ────────────────────────────────────────────
-            const Text('For', style: AppTextStyles.labelLarge),
-            const SizedBox(height: 10),
-            BlocBuilder<MemberCubit, MemberState>(
-              builder: (context, state) {
-                if (state is! MemberLoaded) return const SizedBox.shrink();
-                return _MemberSelector(
-                  members: state.members,
-                  selectedId: _selectedMemberId,
-                  onChanged: (id) => setState(() => _selectedMemberId = id),
-                );
-              },
-            ),
-            const SizedBox(height: 24),
+            // ── Member Selector (expense only) ─────────────────────────────
+            if (_type == TransactionType.expense) ...[
+              const Text('For', style: AppTextStyles.labelLarge),
+              const SizedBox(height: 10),
+              BlocBuilder<MemberCubit, MemberState>(
+                builder: (context, state) {
+                  if (state is! MemberLoaded) return const SizedBox.shrink();
+                  return _MemberSelector(
+                    members: state.members,
+                    selectedId: _selectedMemberId,
+                    onChanged: (id) => setState(() => _selectedMemberId = id),
+                  );
+                },
+              ),
+              if (_selectedMemberId == null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    'Select a member for this expense',
+                    style: AppTextStyles.bodySmall
+                        .copyWith(color: AppColors.danger),
+                  ),
+                ),
+              const SizedBox(height: 24),
+            ],
 
             // ── Amount ─────────────────────────────────────────────────────
             Text('Amount', style: AppTextStyles.labelLarge),
@@ -291,6 +312,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       setState(() {});
       return;
     }
+    // Member is required for expenses
+    if (_type == TransactionType.expense && _selectedMemberId == null) {
+      setState(() {});
+      return;
+    }
 
     final amount = double.parse(_amountController.text);
     final cubit = context.read<TransactionCubit>();
@@ -301,7 +327,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           amount: amount,
           type: _type,
           categoryId: _selectedCategoryId,
-          memberId: _selectedMemberId,
+          memberId: _type == TransactionType.expense ? _selectedMemberId : null,
           note: _noteController.text.isEmpty ? null : _noteController.text,
           date: _selectedDate,
         ),
@@ -311,7 +337,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         amount: amount,
         type: _type,
         categoryId: _selectedCategoryId!,
-        memberId: _selectedMemberId,
+        memberId: _type == TransactionType.expense ? _selectedMemberId : null,
         note: _noteController.text.isEmpty ? null : _noteController.text,
         date: _selectedDate,
       );

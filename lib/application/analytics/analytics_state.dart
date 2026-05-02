@@ -23,6 +23,13 @@ final class MonthlyAnalyticsLoaded extends AnalyticsState {
   final List<VarianceInsight> variances;
   final List<SpendingSuggestion> suggestions;
 
+  /// Expense totals per memberId for the current month.
+  final Map<String, double> expenseByMember;
+
+  /// Expense totals per categoryId per memberId.
+  /// Outer key = memberId, inner key = categoryId.
+  final Map<String, Map<String, double>> expenseByCategoryPerMember;
+
   const MonthlyAnalyticsLoaded({
     required this.year,
     required this.month,
@@ -30,11 +37,21 @@ final class MonthlyAnalyticsLoaded extends AnalyticsState {
     required this.chartData,
     required this.variances,
     required this.suggestions,
+    required this.expenseByMember,
+    required this.expenseByCategoryPerMember,
   });
 
   @override
-  List<Object?> get props =>
-      [year, month, currentSummary, chartData, variances, suggestions];
+  List<Object?> get props => [
+        year,
+        month,
+        currentSummary,
+        chartData,
+        variances,
+        suggestions,
+        expenseByMember,
+        expenseByCategoryPerMember,
+      ];
 }
 
 final class YearlyAnalyticsLoaded extends AnalyticsState {

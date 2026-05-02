@@ -4,6 +4,8 @@ import 'package:equatable/equatable.dart';
 import '../../domain/entities/period_summary.dart';
 import '../../domain/entities/variance_insight.dart';
 import '../../domain/entities/spending_suggestion.dart';
+import '../../domain/repositories/transaction_repository.dart';
+import '../../domain/repositories/member_repository.dart';
 import '../../domain/usecases/calculate_variance.dart';
 import '../../domain/usecases/detect_spending_leaks.dart';
 import '../../domain/usecases/get_period_summary.dart';
@@ -18,20 +20,27 @@ part 'analytics_state.dart';
 /// - Monthly/yearly summaries
 /// - Period-over-period variance insights
 /// - Spending-leak suggestions
+/// - Member expense breakdown
 class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
   static const _tag = 'AnalyticsBloc';
 
   final GetPeriodSummary _getPeriodSummary;
   final CalculateVariance _calculateVariance;
   final DetectSpendingLeaks _detectSpendingLeaks;
+  final TransactionRepository _transactionRepository;
+  final MemberRepository _memberRepository;
 
   AnalyticsBloc({
     required GetPeriodSummary getPeriodSummary,
     required CalculateVariance calculateVariance,
     required DetectSpendingLeaks detectSpendingLeaks,
+    required TransactionRepository transactionRepository,
+    required MemberRepository memberRepository,
   })  : _getPeriodSummary = getPeriodSummary,
         _calculateVariance = calculateVariance,
         _detectSpendingLeaks = detectSpendingLeaks,
+        _transactionRepository = transactionRepository,
+        _memberRepository = memberRepository,
         super(const AnalyticsInitial()) {
     on<LoadMonthlyAnalytics>(_onLoadMonthly);
     on<LoadYearlyAnalytics>(_onLoadYearly);
@@ -58,7 +67,6 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
       DateTime(year, month),
       AppConstants.monthlyChartMonths,
     );
-    AppLogger.d(_tag, 'loading chart data for ${chartMonths.length} months');
 
     final chartSummaries = <DateTime, PeriodSummary>{};
     for (final m in chartMonths) {
@@ -66,44 +74,49 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
       final e = AppDateUtils.endOfMonth(m.year, m.month);
       final result = await _getPeriodSummary.call(s, e);
       result.fold(
-        (failure) => AppLogger.w(_tag, 'chart month ${AppDateUtils.toMonthKey(m)} failed → ${failure.message}'),
-        (summary) {
-          chartSummaries[m] = summary;
-          AppLogger.v(_tag, 'chart month ${AppDateUtils.toMonthKey(m)} → income=${summary.totalIncome} expense=${summary.totalExpense}');
-        },
+        (failure) => AppLogger.w(_tag, 'chart month failed → ${failure.message}'),
+        (summary) => chartSummaries[m] = summary,
       );
     }
 
     // Variance
-    AppLogger.d(_tag, 'calculating variance');
     final varianceResult = await _calculateVariance.call(
       currentStart: currentStart,
       currentEnd: currentEnd,
       previousStart: previousStart,
       previousEnd: previousEnd,
     );
-    varianceResult.fold(
-      (f) => AppLogger.w(_tag, 'variance calculation failed → ${f.message}'),
-      (v) => AppLogger.i(_tag, 'variance → ${v.length} insights'),
-    );
 
     // Spending leaks
-    AppLogger.d(_tag, 'detecting spending leaks');
     final leaksResult = await _detectSpendingLeaks.call(year: year, month: month);
-    leaksResult.fold(
-      (f) => AppLogger.w(_tag, 'spending leak detection failed → ${f.message}'),
-      (s) => AppLogger.i(_tag, 'spending leaks → ${s.length} suggestions'),
-    );
 
     // Current summary
     final currentSummaryResult = await _getPeriodSummary.call(currentStart, currentEnd);
     if (currentSummaryResult.isLeft) {
-      AppLogger.e(_tag, '_onLoadMonthly() current summary failed → ${currentSummaryResult.left.message}');
       emit(AnalyticsError(currentSummaryResult.left.message));
       return;
     }
 
-    AppLogger.i(_tag, '_onLoadMonthly() complete — emitting MonthlyAnalyticsLoaded');
+    // Member breakdown
+    final memberExpenseResult = await _transactionRepository
+        .getExpenseByMember(currentStart, currentEnd);
+    final expenseByMember = memberExpenseResult.isRight
+        ? memberExpenseResult.right
+        : <String, double>{};
+
+    // Per-member category breakdown
+    final membersResult = await _memberRepository.getAll();
+    final members = membersResult.isRight ? membersResult.right : [];
+    final expenseByCategoryPerMember = <String, Map<String, double>>{};
+    for (final member in members) {
+      final catResult = await _transactionRepository
+          .getExpenseByCategoryForMember(currentStart, currentEnd, member.id);
+      if (catResult.isRight && catResult.right.isNotEmpty) {
+        expenseByCategoryPerMember[member.id] = catResult.right;
+      }
+    }
+
+    AppLogger.i(_tag, '_onLoadMonthly() complete');
     emit(MonthlyAnalyticsLoaded(
       year: year,
       month: month,
@@ -111,6 +124,8 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
       chartData: chartSummaries,
       variances: varianceResult.isRight ? varianceResult.right : [],
       suggestions: leaksResult.isRight ? leaksResult.right : [],
+      expenseByMember: expenseByMember,
+      expenseByCategoryPerMember: expenseByCategoryPerMember,
     ));
   }
 
@@ -130,27 +145,17 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
       final result = await _getPeriodSummary.call(start, end);
       result.fold(
         (f) => AppLogger.w(_tag, 'yearly month $m failed → ${f.message}'),
-        (summary) {
-          monthlySummaries[m] = summary;
-          AppLogger.v(_tag, 'yearly month $m → income=${summary.totalIncome} expense=${summary.totalExpense}');
-        },
+        (summary) => monthlySummaries[m] = summary,
       );
     }
 
-    // Year-over-year variance
-    AppLogger.d(_tag, 'calculating year-over-year variance');
     final varianceResult = await _calculateVariance.call(
       currentStart: AppDateUtils.startOfYear(year),
       currentEnd:   AppDateUtils.endOfYear(year),
       previousStart: AppDateUtils.startOfYear(year - 1),
       previousEnd:   AppDateUtils.endOfYear(year - 1),
     );
-    varianceResult.fold(
-      (f) => AppLogger.w(_tag, 'YoY variance failed → ${f.message}'),
-      (v) => AppLogger.i(_tag, 'YoY variance → ${v.length} insights'),
-    );
 
-    AppLogger.i(_tag, '_onLoadYearly() complete — emitting YearlyAnalyticsLoaded');
     emit(YearlyAnalyticsLoaded(
       year: year,
       monthlySummaries: monthlySummaries,

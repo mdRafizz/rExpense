@@ -38,4 +38,17 @@ abstract interface class TransactionRepository {
 
   /// Reactively emits the summary for a date range.
   Stream<PeriodSummary> watchSummary(DateTime start, DateTime end);
+
+  /// Returns expense totals grouped by memberId for a date range.
+  Future<Either<Failure, Map<String, double>>> getExpenseByMember(
+    DateTime start,
+    DateTime end,
+  );
+
+  /// Returns expense totals per category for a specific member.
+  Future<Either<Failure, Map<String, double>>> getExpenseByCategoryForMember(
+    DateTime start,
+    DateTime end,
+    String memberId,
+  );
 }

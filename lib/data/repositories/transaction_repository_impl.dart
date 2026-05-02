@@ -172,4 +172,37 @@ class TransactionRepositoryImpl implements TransactionRepository {
       periodEnd: end,
     );
   }
+
+  @override
+  Future<Either<Failure, Map<String, double>>> getExpenseByMember(
+    DateTime start,
+    DateTime end,
+  ) async {
+    AppLogger.d(_tag, 'getExpenseByMember() [$start → $end]');
+    try {
+      final map = await _db.transactionDao.getExpenseByMember(start, end);
+      return Right(map);
+    } catch (e, st) {
+      AppLogger.e(_tag, 'getExpenseByMember() failed', error: e, stackTrace: st);
+      return Left(DatabaseFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, double>>> getExpenseByCategoryForMember(
+    DateTime start,
+    DateTime end,
+    String memberId,
+  ) async {
+    AppLogger.d(_tag, 'getExpenseByCategoryForMember() member=$memberId');
+    try {
+      final map = await _db.transactionDao
+          .getExpenseByCategoryForMember(start, end, memberId);
+      return Right(map);
+    } catch (e, st) {
+      AppLogger.e(_tag, 'getExpenseByCategoryForMember() failed',
+          error: e, stackTrace: st);
+      return Left(DatabaseFailure(e.toString()));
+    }
+  }
 }

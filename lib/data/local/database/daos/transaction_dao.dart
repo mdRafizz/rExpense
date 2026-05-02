@@ -87,4 +87,44 @@ class TransactionDao extends DatabaseAccessor<AppDatabase>
     }
     return map;
   }
+
+  /// Returns expense totals grouped by memberId for a date range.
+  /// Key is memberId (null → 'family').
+  Future<Map<String, double>> getExpenseByMember(
+    DateTime start,
+    DateTime end,
+  ) async {
+    final rows = await (select(transactionsTable)
+          ..where((t) =>
+              t.date.isBetweenValues(start, end) &
+              t.type.equals('expense')))
+        .get();
+
+    final map = <String, double>{};
+    for (final row in rows) {
+      final key = row.memberId ?? 'member_family';
+      map[key] = (map[key] ?? 0) + row.amount;
+    }
+    return map;
+  }
+
+  /// Returns expense totals per category for a specific member.
+  Future<Map<String, double>> getExpenseByCategoryForMember(
+    DateTime start,
+    DateTime end,
+    String memberId,
+  ) async {
+    final rows = await (select(transactionsTable)
+          ..where((t) =>
+              t.date.isBetweenValues(start, end) &
+              t.type.equals('expense') &
+              t.memberId.equals(memberId)))
+        .get();
+
+    final map = <String, double>{};
+    for (final row in rows) {
+      map[row.categoryId] = (map[row.categoryId] ?? 0) + row.amount;
+    }
+    return map;
+  }
 }

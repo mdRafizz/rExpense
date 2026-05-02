@@ -70,6 +70,8 @@ Future<void> configureDependencies() async {
       getPeriodSummary: sl(),
       calculateVariance: sl(),
       detectSpendingLeaks: sl(),
+      transactionRepository: sl(),
+      memberRepository: sl(),
     ),
   );
   sl.registerLazySingleton(() => SyncCubit(sl()));

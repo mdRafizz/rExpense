@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// Bottom navigation shell that wraps the main tab screens.
+/// Bottom navigation shell — 4 tabs with a centred FAB.
 class AppShell extends StatelessWidget {
   final Widget child;
   const AppShell({super.key, required this.child});
@@ -24,12 +24,6 @@ class AppShell extends StatelessWidget {
       activeIcon: Icons.category_rounded,
       label: 'Categories',
       path: '/categories',
-    ),
-    _Tab(
-      icon: Icons.group_outlined,
-      activeIcon: Icons.group_rounded,
-      label: 'Trackers',
-      path: '/members',
     ),
     _Tab(
       icon: Icons.settings_outlined,
