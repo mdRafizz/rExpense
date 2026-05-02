@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import '../widgets/category_icon_widget.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
@@ -1591,24 +1592,5 @@ class _EmptyState extends StatelessWidget {
 /// Renders a category icon. The [icon] field is either:
 /// - A multi-character emoji string (e.g. "🍔")
 /// - A hex codepoint string for a Material icon (e.g. "e318")
-Widget _categoryIconWidget(String icon, Color color, double size) {
-  if (icon.isEmpty) {
-    return Icon(Icons.category_outlined, color: color, size: size);
-  }
-
-  // Try to parse as a hex codepoint (Material icon)
-  final codePoint = int.tryParse(icon, radix: 16);
-  if (codePoint != null) {
-    return Icon(
-      IconData(codePoint, fontFamily: 'MaterialIcons'),
-      color: color,
-      size: size,
-    );
-  }
-
-  // Treat as emoji
-  return Text(
-    icon,
-    style: TextStyle(fontSize: size * 0.9),
-  );
-}
+Widget _categoryIconWidget(String icon, Color color, double size) =>
+    buildCategoryIcon(icon, color: color, size: size);

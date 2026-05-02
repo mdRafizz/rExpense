@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/category.dart';
 import '../../core/theme/app_text_styles.dart';
+import 'category_icon_widget.dart';
 
 /// Renders a category icon — supports both emoji strings and legacy
 /// Material icon hex codepoints.
@@ -17,15 +18,7 @@ class _CategoryIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final code = int.tryParse(icon, radix: 16);
-    if (code == null) {
-      return Text(icon, style: TextStyle(fontSize: size));
-    }
-    return Icon(
-      IconData(code, fontFamily: 'MaterialIcons'),
-      color: color,
-      size: size,
-    );
+    return buildCategoryIcon(icon, color: color, size: size);
   }
 }
 

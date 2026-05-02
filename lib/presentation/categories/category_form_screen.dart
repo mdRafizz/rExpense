@@ -143,12 +143,12 @@ class _TrackerDef {
   const _TrackerDef(this.memberId, this.emoji, this.label, this.color);
 }
 
-const _kTrackers = [
+/*const _kTrackers = [
   _TrackerDef('member_family',   '👨‍👩‍👧‍👦', 'Family',   Color(0xFF6C63FF)),
   _TrackerDef('member_personal', '👤',       'Personal', Color(0xFF3A86FF)),
   _TrackerDef('member_wife',     '👩',       'Wife',     Color(0xFFFF6584)),
   _TrackerDef('member_child',    '👦',       'Child',    Color(0xFFFFBE0B)),
-];
+];*/
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -303,7 +303,7 @@ class _CategoryFormScreenState extends State<CategoryFormScreen> {
               const SizedBox(height: 28),
 
               // ── Tracker ────────────────────────────────────────────────────
-              const Text('Tracker', style: AppTextStyles.labelLarge),
+              /*const Text('Tracker', style: AppTextStyles.labelLarge),
               const SizedBox(height: 4),
               const Text(
                 'Which spending profile does this category belong to?',
@@ -314,7 +314,7 @@ class _CategoryFormScreenState extends State<CategoryFormScreen> {
                 selectedId: _selectedTrackerId,
                 onChanged: (id) => setState(() => _selectedTrackerId = id),
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 28),*/
 
               // ── Unnecessary toggle ─────────────────────────────────────────
               Container(
@@ -492,6 +492,7 @@ class _EmojiGroupSection extends StatelessWidget {
 
 // ── Tracker selector ──────────────────────────────────────────────────────────
 
+/*
 class _TrackerSelector extends StatelessWidget {
   final String selectedId;
   final ValueChanged<String> onChanged;
@@ -566,3 +567,4 @@ class _TrackerSelector extends StatelessWidget {
     );
   }
 }
+*/

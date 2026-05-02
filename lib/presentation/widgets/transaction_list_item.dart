@@ -5,6 +5,7 @@ import '../../domain/entities/category.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/currency_formatter.dart';
+import 'category_icon_widget.dart';
 
 /// A single transaction row in a list.
 class TransactionListItem extends StatelessWidget {
@@ -146,14 +147,5 @@ Widget _categoryIconWidget(Category? cat, Color color) {
   if (cat == null) {
     return Icon(Icons.receipt_outlined, color: color, size: 20);
   }
-  final code = int.tryParse(cat.icon, radix: 16);
-  if (code == null) {
-    // Emoji path
-    return Text(cat.icon, style: const TextStyle(fontSize: 20));
-  }
-  return Icon(
-    IconData(code, fontFamily: 'MaterialIcons'),
-    color: color,
-    size: 20,
-  );
+  return buildCategoryIcon(cat.icon, color: color, size: 20);
 }

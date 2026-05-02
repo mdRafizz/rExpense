@@ -134,7 +134,7 @@ class _LoadedBody extends StatelessWidget {
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // ── Member Strip ───────────────────────────────────────────────
-              BlocBuilder<MemberCubit, MemberState>(
+              /*BlocBuilder<MemberCubit, MemberState>(
                 builder: (context, memberState) {
                   if (memberState is! MemberLoaded) return const SizedBox.shrink();
                   return _MemberStrip(
@@ -146,7 +146,7 @@ class _LoadedBody extends StatelessWidget {
                 },
               ),
               const SizedBox(height: 20),
-
+*/
               // ── Summary Card ───────────────────────────────────────────────
               SummaryCard(
                 income: state.summary.totalIncome,
@@ -156,13 +156,13 @@ class _LoadedBody extends StatelessWidget {
               const SizedBox(height: 24),
 
               // ── Quick Track ────────────────────────────────────────────────
-              const Text('Quick Track', style: AppTextStyles.headlineSmall),
+              /*const Text('Quick Track', style: AppTextStyles.headlineSmall),
               const SizedBox(height: 12),
               _QuickTrackRow(
                 items: _quickTrackItems,
                 defaultMemberId: sl<MemberCubit>().effectiveMemberId,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 24),*/
 
               // ── Add buttons ────────────────────────────────────────────────
               Row(

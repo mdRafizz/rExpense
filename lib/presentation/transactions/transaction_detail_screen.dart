@@ -8,6 +8,7 @@ import '../../application/category/category_cubit.dart';
 import '../../core/di/injection.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../widgets/category_icon_widget.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../domain/entities/transaction.dart';
 
@@ -119,17 +120,24 @@ class _DetailView extends StatelessWidget {
                   _DetailRow(
                     label: 'Category',
                     value: category?.name ?? 'Unknown',
-                    icon: _categoryIconData(category),
-                    iconColor:
-                        category != null ? Color(category.color) : null,
-                    emojiIcon: _categoryEmoji(category),
+                    iconWidget: buildCategoryIcon(
+                      category?.icon ?? '',
+                      color: category != null
+                          ? Color(category.color)
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                      size: 18,
+                    ),
                   ),
                   const Divider(height: 24),
                   _DetailRow(
                     label: 'Date',
                     value: DateFormat('EEEE, MMMM d, y')
                         .format(transaction.date),
-                    icon: Icons.calendar_today_outlined,
+                    iconWidget: Icon(
+                      Icons.calendar_today_outlined,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   if (transaction.note != null &&
                       transaction.note!.isNotEmpty) ...[
@@ -137,7 +145,11 @@ class _DetailView extends StatelessWidget {
                     _DetailRow(
                       label: 'Note',
                       value: transaction.note!,
-                      icon: Icons.notes_outlined,
+                      iconWidget: Icon(
+                        Icons.notes_outlined,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                   const Divider(height: 24),
@@ -145,7 +157,11 @@ class _DetailView extends StatelessWidget {
                     label: 'Added',
                     value: DateFormat('MMM d, y · h:mm a')
                         .format(transaction.createdAt),
-                    icon: Icons.access_time_outlined,
+                    iconWidget: Icon(
+                      Icons.access_time_outlined,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -186,38 +202,20 @@ class _DetailView extends StatelessWidget {
 class _DetailRow extends StatelessWidget {
   final String label;
   final String value;
-  final IconData icon;
-  final Color? iconColor;
-  /// If set, renders an emoji instead of [icon].
-  final String? emojiIcon;
+  /// Pre-built icon widget (handles both Material icons and emoji/codepoint icons).
+  final Widget iconWidget;
 
   const _DetailRow({
     required this.label,
     required this.value,
-    required this.icon,
-    this.iconColor,
-    this.emojiIcon,
+    required this.iconWidget,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        if (emojiIcon != null)
-          SizedBox(
-            width: 18,
-            child: Text(
-              emojiIcon!,
-              style: const TextStyle(fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-          )
-        else
-          Icon(
-            icon,
-            size: 18,
-            color: iconColor ?? Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+        SizedBox(width: 18, child: Center(child: iconWidget)),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -239,19 +237,4 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
-// ── Icon helpers ──────────────────────────────────────────────────────────────
-
-/// Returns the emoji string if [cat]'s icon is not a hex codepoint, else null.
-String? _categoryEmoji(dynamic cat) {
-  if (cat == null) return null;
-  final code = int.tryParse(cat.icon as String, radix: 16);
-  return code == null ? cat.icon as String : null;
-}
-
-/// Returns an [IconData] for [cat]'s icon if it's a hex codepoint.
-IconData _categoryIconData(dynamic cat) {
-  if (cat == null) return Icons.category_outlined;
-  final code = int.tryParse(cat.icon as String, radix: 16);
-  if (code == null) return Icons.category_outlined; // emoji case — emojiIcon used instead
-  return IconData(code, fontFamily: 'MaterialIcons');
-}
+// ── Icon helpers removed — use buildCategoryIcon() from category_icon_widget.dart

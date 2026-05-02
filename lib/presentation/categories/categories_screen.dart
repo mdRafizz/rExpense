@@ -7,6 +7,7 @@ import '../../core/di/injection.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../domain/entities/category.dart';
+import '../widgets/category_icon_widget.dart';
 
 /// Sub-labels shown under each category name to clarify what it covers.
 const _kSubLabels = <String, String>{
@@ -205,20 +206,8 @@ class _CategoryTile extends StatelessWidget {
 
   /// Render the category icon — supports both emoji strings and legacy
   /// Material icon hex codepoints.
-  Widget _iconWidget(String icon, Color color) {
-    // If it's a single grapheme cluster (emoji), render as text
-    final code = int.tryParse(icon, radix: 16);
-    if (code == null) {
-      // Emoji path
-      return Text(icon, style: const TextStyle(fontSize: 20));
-    }
-    // Legacy hex codepoint path
-    return Icon(
-      IconData(code, fontFamily: 'MaterialIcons'),
-      color: color,
-      size: 20,
-    );
-  }
+  Widget _iconWidget(String icon, Color color) =>
+      buildCategoryIcon(icon, color: color, size: 20);
 
   Future<void> _confirmDelete(BuildContext context, Category cat) async {
     final ok = await showDialog<bool>(
