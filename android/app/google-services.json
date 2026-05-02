@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "535391592904",
+    "project_id": "rexpense-3c6f7",
+    "storage_bucket": "rexpense-3c6f7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:535391592904:android:a2cb5d217fdbcf6b1820fd",
+        "android_client_info": {
+          "package_name": "com.mdraf.rexpense"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuiuJWKpP8wRfgm57MLntxLvtRVRWBKm8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
