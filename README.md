@@ -1,4 +1,4 @@
-# rexpense
+# rExpense
 
 A new Flutter project.
 
