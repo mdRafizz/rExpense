@@ -2,16 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../presentation/shell/app_shell.dart';
-import '../../presentation/dashboard/dashboard_screen.dart';
-import '../../presentation/analytics/analytics_screen.dart';
-import '../../presentation/transactions/add_transaction_screen.dart';
-import '../../presentation/transactions/transaction_detail_screen.dart';
-import '../../presentation/categories/categories_screen.dart';
-import '../../presentation/categories/category_form_screen.dart';
-import '../../presentation/members/members_screen.dart';
-import '../../presentation/settings/settings_screen.dart';
-import '../../domain/entities/transaction.dart';
-import '../../domain/entities/category.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -26,36 +16,30 @@ final appRouter = GoRouter(
       routes: [
         GoRoute(
           path: '/dashboard',
-          pageBuilder: (_, __) =>
-              const NoTransitionPage(child: DashboardScreen()),
+          pageBuilder: (_, __) => const NoTransitionPage(child: Scaffold()),
         ),
         GoRoute(
           path: '/analytics',
-          pageBuilder: (_, __) =>
-              const NoTransitionPage(child: AnalyticsScreen()),
+          pageBuilder: (_, __) => const NoTransitionPage(child: Scaffold()),
         ),
         GoRoute(
           path: '/categories',
-          pageBuilder: (_, __) =>
-              const NoTransitionPage(child: CategoriesScreen()),
+          pageBuilder: (_, __) => NoTransitionPage(child: Scaffold()),
           routes: [
             GoRoute(
               path: 'new',
               parentNavigatorKey: _rootNavigatorKey,
-              builder: (_, __) => const CategoryFormScreen(),
+              builder: (_, __) => Scaffold(),
             ),
             GoRoute(
-              path: 'edit',
-              parentNavigatorKey: _rootNavigatorKey,
-              builder: (_, state) =>
-                  CategoryFormScreen(category: state.extra as Category),
-            ),
+                path: 'edit',
+                parentNavigatorKey: _rootNavigatorKey,
+                builder: (_, state) => Scaffold()),
           ],
         ),
         GoRoute(
           path: '/settings',
-          pageBuilder: (_, __) =>
-              const NoTransitionPage(child: SettingsScreen()),
+          pageBuilder: (_, __) => const NoTransitionPage(child: Scaffold()),
         ),
       ],
     ),
@@ -64,41 +48,34 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/categories/new',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (_, __) => const CategoryFormScreen(),
+      builder: (_, __) => Scaffold(),
     ),
     GoRoute(
       path: '/categories/edit',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (_, state) =>
-          CategoryFormScreen(category: state.extra as Category),
+      builder: (_, state) => Scaffold(),
     ),
     GoRoute(
       path: '/members',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (_, __) => const MembersScreen(),
+      builder: (_, __) => Scaffold(),
     ),
     GoRoute(
       path: '/transactions/add',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (_, state) {
         final extra = state.extra as Map<String, dynamic>?;
-        return AddTransactionScreen(
-          initialType: extra?['type'] as TransactionType?,
-          initialCategoryId: extra?['categoryId'] as String?,
-        );
+        return Scaffold();
       },
     ),
     GoRoute(
-      path: '/transactions/edit',
-      parentNavigatorKey: _rootNavigatorKey,
-      builder: (_, state) =>
-          AddTransactionScreen(existingTransaction: state.extra as Transaction),
-    ),
+        path: '/transactions/edit',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (_, state) => Scaffold()),
     GoRoute(
       path: '/transactions/detail',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (_, state) =>
-          TransactionDetailScreen(transaction: state.extra as Transaction),
+      builder: (_, state) => Scaffold(),
     ),
   ],
 );

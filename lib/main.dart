@@ -2,40 +2,12 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'core/di/injection.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
-import 'core/logger/app_logger.dart';
-import 'core/logger/bloc_logger.dart';
-import 'application/sync/sync_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  FlutterError.onError = (FlutterErrorDetails details) {
-    AppLogger.f(
-      'Flutter',
-      details.exceptionAsString(),
-      error: details.exception,
-      stackTrace: details.stack,
-    );
-    FlutterError.presentError(details);
-  };
-
-  Bloc.observer = AppBlocObserver();
-  AppLogger.i('App', '━━━ rExpense starting ━━━');
-
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-
-  await configureDependencies();
-  AppLogger.i('App', 'Dependency injection configured');
-
-  sl<SyncCubit>().triggerAutoBackupIfDue();
 
   runApp(const RexpenseApp());
 }
@@ -62,11 +34,10 @@ class RexpenseApp extends StatelessWidget {
 }
 
 // ── Root-level back-press handler ─────────────────────────────────────────────
-// Wraps the entire app so it intercepts the Android back button before
-// GoRouter or any navigator can handle it.
 
 class _BackPressHandler extends StatelessWidget {
   final Widget child;
+
   const _BackPressHandler({required this.child});
 
   static Future<bool> _showExitDialog(BuildContext context) async {
@@ -185,8 +156,8 @@ class _ExitDialog extends StatelessWidget {
                           ),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: const Color(0xFFFF6584)
-                                .withValues(alpha: 0.3),
+                            color:
+                                const Color(0xFFFF6584).withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -317,9 +288,6 @@ class _GlassButton extends StatelessWidget {
 }
 
 // ── Bounce scroll behaviour ───────────────────────────────────────────────────
-
-/// Forces [BouncingScrollPhysics] on every scrollable in the widget tree,
-/// including [ListView], [SingleChildScrollView], [CustomScrollView], etc.
 class _BouncingScrollBehavior extends ScrollBehavior {
   const _BouncingScrollBehavior();
 
@@ -333,6 +301,5 @@ class _BouncingScrollBehavior extends ScrollBehavior {
     Widget child,
     ScrollableDetails details,
   ) =>
-      // Remove the Android glow/stretch indicator — iOS has none
       child;
 }
