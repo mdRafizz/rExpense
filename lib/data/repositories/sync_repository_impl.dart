@@ -32,7 +32,7 @@ class SyncRepositoryImpl implements SyncRepository {
       final account = await _googleSignIn.signIn();
       if (account == null) {
         AppLogger.w(_tag, 'signIn() cancelled by user');
-        return Left(const AuthFailure('Sign-in cancelled by user'));
+        return const Left(AuthFailure('Sign-in cancelled by user'));
       }
       AppLogger.i(_tag, 'signIn() success → ${account.email}');
       return Right(account.email);
