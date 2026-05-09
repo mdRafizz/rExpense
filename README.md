@@ -36,7 +36,7 @@ The project follows a clean architecture pattern with four layers:
 
 1. **Clone the repo**
    ```bash
-   git clone https://github.com/your-username/rexpense.git
+   git clone https://github.com/mdRafizz/rExpense.git
    cd rexpense
    ```
 
