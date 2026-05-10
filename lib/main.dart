@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -17,82 +16,14 @@ class RexpenseApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ScrollConfiguration(
-      behavior: const _BouncingScrollBehavior(),
-      child: _BackPressHandler(
-        child: MaterialApp.router(
-          title: 'rExpense',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.light,
-          darkTheme: AppTheme.dark,
-          themeMode: ThemeMode.system,
-          routerConfig: appRouter,
-        ),
-      ),
-    );
-  }
-}
-
-// ── Root-level back-press handler ─────────────────────────────────────────────
-
-class _BackPressHandler extends StatelessWidget {
-  final Widget child;
-
-  const _BackPressHandler({required this.child});
-
-  static Future<bool> _showExitDialog(BuildContext context) async {
-    final result = await showDialog<bool>(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.45),
-      barrierDismissible: false,
-      builder: (_) => const _ExitDialog(),
-    );
-    return result ?? false;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return PopScope(
-      // Never allow the default pop — we decide what happens
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-
-        // Ask GoRouter what the current location is
-        final router = appRouter;
-        final location = router.routerDelegate.currentConfiguration.uri.path;
-
-        final isAtRoot = location == '/dashboard' ||
-            location == '/analytics' ||
-            location == '/categories' ||
-            location == '/settings';
-
-        if (!isAtRoot) {
-          // We're inside a full-screen route (add/edit/detail) — let it pop
-          // by re-enabling pop for one frame via the navigator directly.
-          if (context.mounted) {
-            final nav = Navigator.maybeOf(context);
-            if (nav != null && nav.canPop()) {
-              nav.pop();
-            }
-          }
-          return;
-        }
-
-        if (location != '/dashboard') {
-          // On a non-home tab — go back to dashboard
-          if (context.mounted) appRouter.go('/dashboard');
-          return;
-        }
-
-        // On dashboard — show exit dialog
-        if (!context.mounted) return;
-        final shouldExit = await _showExitDialog(context);
-        if (shouldExit && context.mounted) {
-          SystemNavigator.pop();
-        }
-      },
-      child: child,
+    return MaterialApp.router(
+      title: 'rExpense',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.system,
+      routerConfig: appRouter,
+      scrollBehavior: const _BouncingScrollBehavior(),
     );
   }
 }
