@@ -23,8 +23,9 @@ class TransactionTable extends Table {
   TextColumn get notes => text().nullable()();
 
   TextColumn get transactionType => text().customConstraint(
-    'CHECK (transactionType IN ("income","expense"))',
+    'NOT NULL CHECK (transactionType IN ("income","expense"))',
   )();
+
 
   IntColumn get categoryId =>
       integer().references(CategoryTable, #id)();

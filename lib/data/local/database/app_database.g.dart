@@ -33,6 +33,11 @@ class $CategoryTableTable extends CategoryTable
       type: DriftSqlType.string,
       requiredDuringInsert: true,
       $customConstraints: 'CHECK (type IN ("income","expense"))');
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+      'note', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _colorIntMeta =
       const VerificationMeta('colorInt');
   @override
@@ -50,7 +55,8 @@ class $CategoryTableTable extends CategoryTable
           GeneratedColumn.constraintIsAlways('CHECK ("is_active" IN (0, 1))'),
       defaultValue: const Constant(true));
   @override
-  List<GeneratedColumn> get $columns => [id, name, type, colorInt, isActive];
+  List<GeneratedColumn> get $columns =>
+      [id, name, type, note, colorInt, isActive];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -76,6 +82,10 @@ class $CategoryTableTable extends CategoryTable
     } else if (isInserting) {
       context.missing(_typeMeta);
     }
+    if (data.containsKey('note')) {
+      context.handle(
+          _noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
+    }
     if (data.containsKey('color_int')) {
       context.handle(_colorIntMeta,
           colorInt.isAcceptableOrUnknown(data['color_int']!, _colorIntMeta));
@@ -99,6 +109,8 @@ class $CategoryTableTable extends CategoryTable
           .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
       type: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      note: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}note']),
       colorInt: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}color_int']),
       isActive: attachedDatabase.typeMapping
@@ -117,12 +129,14 @@ class CategoryTableData extends DataClass
   final int id;
   final String name;
   final String type;
+  final String? note;
   final int? colorInt;
   final bool isActive;
   const CategoryTableData(
       {required this.id,
       required this.name,
       required this.type,
+      this.note,
       this.colorInt,
       required this.isActive});
   @override
@@ -131,6 +145,9 @@ class CategoryTableData extends DataClass
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
     map['type'] = Variable<String>(type);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
     if (!nullToAbsent || colorInt != null) {
       map['color_int'] = Variable<int>(colorInt);
     }
@@ -143,6 +160,7 @@ class CategoryTableData extends DataClass
       id: Value(id),
       name: Value(name),
       type: Value(type),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       colorInt: colorInt == null && nullToAbsent
           ? const Value.absent()
           : Value(colorInt),
@@ -157,6 +175,7 @@ class CategoryTableData extends DataClass
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       type: serializer.fromJson<String>(json['type']),
+      note: serializer.fromJson<String?>(json['note']),
       colorInt: serializer.fromJson<int?>(json['colorInt']),
       isActive: serializer.fromJson<bool>(json['isActive']),
     );
@@ -168,6 +187,7 @@ class CategoryTableData extends DataClass
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
       'type': serializer.toJson<String>(type),
+      'note': serializer.toJson<String?>(note),
       'colorInt': serializer.toJson<int?>(colorInt),
       'isActive': serializer.toJson<bool>(isActive),
     };
@@ -177,12 +197,14 @@ class CategoryTableData extends DataClass
           {int? id,
           String? name,
           String? type,
+          Value<String?> note = const Value.absent(),
           Value<int?> colorInt = const Value.absent(),
           bool? isActive}) =>
       CategoryTableData(
         id: id ?? this.id,
         name: name ?? this.name,
         type: type ?? this.type,
+        note: note.present ? note.value : this.note,
         colorInt: colorInt.present ? colorInt.value : this.colorInt,
         isActive: isActive ?? this.isActive,
       );
@@ -191,6 +213,7 @@ class CategoryTableData extends DataClass
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       type: data.type.present ? data.type.value : this.type,
+      note: data.note.present ? data.note.value : this.note,
       colorInt: data.colorInt.present ? data.colorInt.value : this.colorInt,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
     );
@@ -202,6 +225,7 @@ class CategoryTableData extends DataClass
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('type: $type, ')
+          ..write('note: $note, ')
           ..write('colorInt: $colorInt, ')
           ..write('isActive: $isActive')
           ..write(')'))
@@ -209,7 +233,7 @@ class CategoryTableData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(id, name, type, colorInt, isActive);
+  int get hashCode => Object.hash(id, name, type, note, colorInt, isActive);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -217,6 +241,7 @@ class CategoryTableData extends DataClass
           other.id == this.id &&
           other.name == this.name &&
           other.type == this.type &&
+          other.note == this.note &&
           other.colorInt == this.colorInt &&
           other.isActive == this.isActive);
 }
@@ -225,12 +250,14 @@ class CategoryTableCompanion extends UpdateCompanion<CategoryTableData> {
   final Value<int> id;
   final Value<String> name;
   final Value<String> type;
+  final Value<String?> note;
   final Value<int?> colorInt;
   final Value<bool> isActive;
   const CategoryTableCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.type = const Value.absent(),
+    this.note = const Value.absent(),
     this.colorInt = const Value.absent(),
     this.isActive = const Value.absent(),
   });
@@ -238,6 +265,7 @@ class CategoryTableCompanion extends UpdateCompanion<CategoryTableData> {
     this.id = const Value.absent(),
     required String name,
     required String type,
+    this.note = const Value.absent(),
     this.colorInt = const Value.absent(),
     this.isActive = const Value.absent(),
   })  : name = Value(name),
@@ -246,6 +274,7 @@ class CategoryTableCompanion extends UpdateCompanion<CategoryTableData> {
     Expression<int>? id,
     Expression<String>? name,
     Expression<String>? type,
+    Expression<String>? note,
     Expression<int>? colorInt,
     Expression<bool>? isActive,
   }) {
@@ -253,6 +282,7 @@ class CategoryTableCompanion extends UpdateCompanion<CategoryTableData> {
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (type != null) 'type': type,
+      if (note != null) 'note': note,
       if (colorInt != null) 'color_int': colorInt,
       if (isActive != null) 'is_active': isActive,
     });
@@ -262,12 +292,14 @@ class CategoryTableCompanion extends UpdateCompanion<CategoryTableData> {
       {Value<int>? id,
       Value<String>? name,
       Value<String>? type,
+      Value<String?>? note,
       Value<int?>? colorInt,
       Value<bool>? isActive}) {
     return CategoryTableCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       type: type ?? this.type,
+      note: note ?? this.note,
       colorInt: colorInt ?? this.colorInt,
       isActive: isActive ?? this.isActive,
     );
@@ -285,6 +317,9 @@ class CategoryTableCompanion extends UpdateCompanion<CategoryTableData> {
     if (type.present) {
       map['type'] = Variable<String>(type.value);
     }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
     if (colorInt.present) {
       map['color_int'] = Variable<int>(colorInt.value);
     }
@@ -300,6 +335,7 @@ class CategoryTableCompanion extends UpdateCompanion<CategoryTableData> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('type: $type, ')
+          ..write('note: $note, ')
           ..write('colorInt: $colorInt, ')
           ..write('isActive: $isActive')
           ..write(')'))
@@ -1353,7 +1389,8 @@ class $TransactionTableTable extends TransactionTable
       'transaction_type', aliasedName, false,
       type: DriftSqlType.string,
       requiredDuringInsert: true,
-      $customConstraints: 'CHECK (transactionType IN ("income","expense"))');
+      $customConstraints:
+          'NOT NULL CHECK (transactionType IN ("income","expense"))');
   static const VerificationMeta _categoryIdMeta =
       const VerificationMeta('categoryId');
   @override
@@ -1898,6 +1935,7 @@ typedef $$CategoryTableTableCreateCompanionBuilder = CategoryTableCompanion
   Value<int> id,
   required String name,
   required String type,
+  Value<String?> note,
   Value<int?> colorInt,
   Value<bool> isActive,
 });
@@ -1906,6 +1944,7 @@ typedef $$CategoryTableTableUpdateCompanionBuilder = CategoryTableCompanion
   Value<int> id,
   Value<String> name,
   Value<String> type,
+  Value<String?> note,
   Value<int?> colorInt,
   Value<bool> isActive,
 });
@@ -1950,6 +1989,9 @@ class $$CategoryTableTableFilterComposer
 
   ColumnFilters<String> get type => $composableBuilder(
       column: $table.type, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get note => $composableBuilder(
+      column: $table.note, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get colorInt => $composableBuilder(
       column: $table.colorInt, builder: (column) => ColumnFilters(column));
@@ -1997,6 +2039,9 @@ class $$CategoryTableTableOrderingComposer
   ColumnOrderings<String> get type => $composableBuilder(
       column: $table.type, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get note => $composableBuilder(
+      column: $table.note, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get colorInt => $composableBuilder(
       column: $table.colorInt, builder: (column) => ColumnOrderings(column));
 
@@ -2021,6 +2066,9 @@ class $$CategoryTableTableAnnotationComposer
 
   GeneratedColumn<String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
 
   GeneratedColumn<int> get colorInt =>
       $composableBuilder(column: $table.colorInt, builder: (column) => column);
@@ -2076,6 +2124,7 @@ class $$CategoryTableTableTableManager extends RootTableManager<
             Value<int> id = const Value.absent(),
             Value<String> name = const Value.absent(),
             Value<String> type = const Value.absent(),
+            Value<String?> note = const Value.absent(),
             Value<int?> colorInt = const Value.absent(),
             Value<bool> isActive = const Value.absent(),
           }) =>
@@ -2083,6 +2132,7 @@ class $$CategoryTableTableTableManager extends RootTableManager<
             id: id,
             name: name,
             type: type,
+            note: note,
             colorInt: colorInt,
             isActive: isActive,
           ),
@@ -2090,6 +2140,7 @@ class $$CategoryTableTableTableManager extends RootTableManager<
             Value<int> id = const Value.absent(),
             required String name,
             required String type,
+            Value<String?> note = const Value.absent(),
             Value<int?> colorInt = const Value.absent(),
             Value<bool> isActive = const Value.absent(),
           }) =>
@@ -2097,6 +2148,7 @@ class $$CategoryTableTableTableManager extends RootTableManager<
             id: id,
             name: name,
             type: type,
+            note: note,
             colorInt: colorInt,
             isActive: isActive,
           ),

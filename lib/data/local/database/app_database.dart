@@ -40,26 +40,153 @@ class AppDatabase extends _$AppDatabase {
   Future<void> _insertDefaultData() async {
     await batch((b) {
       b.insertAll(categoryTable, [
+        // ================= INCOME =================
+
         CategoryTableCompanion.insert(
           name: '💰 Salary',
           type: 'income',
+          note: const Value(
+            'Monthly salary, office payment, freelance income',
+          ),
           colorInt: const Value(0xFF34C759), // iOS Green
         ),
+
+        CategoryTableCompanion.insert(
+          name: '🎁 Gift',
+          type: 'income',
+          note: const Value(
+            'Gift money, bonus, rewards, eid salami',
+          ),
+          colorInt: const Value(0xFF30B0C7),
+        ),
+
+        CategoryTableCompanion.insert(
+          name: '📈 Business',
+          type: 'income',
+          note: const Value(
+            'Business profit, shop income, side income',
+          ),
+          colorInt: const Value(0xFF32ADE6),
+        ),
+
+        // ================= EXPENSE =================
+
         CategoryTableCompanion.insert(
           name: '🛒 Grocery',
           type: 'expense',
+          note: const Value(
+            'Rice, oil, vegetables, daily household shopping',
+          ),
           colorInt: const Value(0xFFFF9F0A), // iOS Orange
         ),
+
+        CategoryTableCompanion.insert(
+          name: '🥚 Egg',
+          type: 'expense',
+          note: const Value(
+            'Egg purchase for home cooking and meals',
+          ),
+          colorInt: const Value(0xFFFFCC00),
+        ),
+
+        CategoryTableCompanion.insert(
+          name: '🍖 Meat',
+          type: 'expense',
+          note: const Value(
+            'Chicken, beef, mutton, fish purchase',
+          ),
+          colorInt: const Value(0xFFFF3B30),
+        ),
+
         CategoryTableCompanion.insert(
           name: '🏠 Rent',
           type: 'expense',
+          note: const Value(
+            'House rent, apartment rent, hostel payment',
+          ),
           colorInt: const Value(0xFF5E5CE6), // iOS Indigo
         ),
+
         CategoryTableCompanion.insert(
           name: '⚡ Utilities',
           type: 'expense',
+          note: const Value(
+            'Electricity, water, gas, internet, mobile bill',
+          ),
           colorInt: const Value(0xFFFFD60A), // iOS Yellow
         ),
+
+        CategoryTableCompanion.insert(
+          name: '🚌 Transport',
+          type: 'expense',
+          note: const Value(
+            'Bus fare, rickshaw, CNG, fuel, Uber',
+          ),
+          colorInt: const Value(0xFF64D2FF),
+        ),
+
+        CategoryTableCompanion.insert(
+          name: '✈️ Travel',
+          type: 'expense',
+          note: const Value(
+            'Tour, hotel, tickets, vacation expenses',
+          ),
+          colorInt: const Value(0xFF0A84FF),
+        ),
+
+        CategoryTableCompanion.insert(
+          name: '📚 Education',
+          type: 'expense',
+          note: const Value(
+            'Books, courses, tuition, exam fees',
+          ),
+          colorInt: const Value(0xFFBF5AF2),
+        ),
+
+        CategoryTableCompanion.insert(
+          name: '💊 Medical',
+          type: 'expense',
+          note: const Value(
+            'Medicine, doctor fees, hospital expenses',
+          ),
+          colorInt: const Value(0xFFFF375F),
+        ),
+
+        CategoryTableCompanion.insert(
+          name: '🍽️ Restaurant',
+          type: 'expense',
+          note: const Value(
+            'Dining out, fast food, cafe expenses',
+          ),
+          colorInt: const Value(0xFFFF9500),
+        ),
+
+        CategoryTableCompanion.insert(
+          name: '🎉 Entertainment',
+          type: 'expense',
+          note: const Value(
+            'Movies, games, subscriptions, fun activities',
+          ),
+          colorInt: const Value(0xFFAF52DE),
+        ),
+
+        CategoryTableCompanion.insert(
+          name: '🤲 Sadaqah',
+          type: 'expense',
+          note: const Value(
+            'Charity, donations, helping needy people',
+          ),
+          colorInt: const Value(0xFF30D158),
+        ),
+
+        /*CategoryTableCompanion.insert(
+          name: '👨‍👩‍👧 Family',
+          type: 'expense',
+          note: const Value(
+            'Parents, spouse, children, family support',
+          ),
+          colorInt: const Value(0xFFFF6482),
+        ),*/
       ]);
 
       b.insertAll(contributorTable, [
@@ -69,7 +196,7 @@ class AppDatabase extends _$AppDatabase {
           colorInt: const Value(0xFF0A84FF), // iOS Blue
         ),
         ContributorTableCompanion.insert(
-          name: '💑 Spouse',
+          name: '💖 Spouse',
           notes: const Value('Partner income'),
           colorInt: const Value(0xFFFF375F), // iOS Pink
         ),
