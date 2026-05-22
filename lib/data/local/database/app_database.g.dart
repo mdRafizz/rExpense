@@ -1371,12 +1371,12 @@ class $TransactionTableTable extends TransactionTable
       type: DriftSqlType.double,
       requiredDuringInsert: false,
       defaultValue: const Constant(0.0));
+  static const VerificationMeta _transactionDateMeta =
+      const VerificationMeta('transactionDate');
   @override
-  late final GeneratedColumnWithTypeConverter<DateTime, int> transactionDate =
-      GeneratedColumn<int>('transaction_date', aliasedName, false,
-              type: DriftSqlType.int, requiredDuringInsert: true)
-          .withConverter<DateTime>(
-              $TransactionTableTable.$convertertransactionDate);
+  late final GeneratedColumn<DateTime> transactionDate =
+      GeneratedColumn<DateTime>('transaction_date', aliasedName, false,
+          type: DriftSqlType.dateTime, requiredDuringInsert: true);
   static const VerificationMeta _notesMeta = const VerificationMeta('notes');
   @override
   late final GeneratedColumn<String> notes = GeneratedColumn<String>(
@@ -1427,13 +1427,14 @@ class $TransactionTableTable extends TransactionTable
       requiredDuringInsert: true,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('REFERENCES account_table (id)'));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
   @override
-  late final GeneratedColumnWithTypeConverter<DateTime, int> createdAt =
-      GeneratedColumn<int>('created_at', aliasedName, false,
-              type: DriftSqlType.int,
-              requiredDuringInsert: false,
-              clientDefault: () => DateTime.now().millisecondsSinceEpoch)
-          .withConverter<DateTime>($TransactionTableTable.$convertercreatedAt);
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      clientDefault: () => DateTime.now());
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -1464,6 +1465,14 @@ class $TransactionTableTable extends TransactionTable
     if (data.containsKey('amount')) {
       context.handle(_amountMeta,
           amount.isAcceptableOrUnknown(data['amount']!, _amountMeta));
+    }
+    if (data.containsKey('transaction_date')) {
+      context.handle(
+          _transactionDateMeta,
+          transactionDate.isAcceptableOrUnknown(
+              data['transaction_date']!, _transactionDateMeta));
+    } else if (isInserting) {
+      context.missing(_transactionDateMeta);
     }
     if (data.containsKey('notes')) {
       context.handle(
@@ -1503,6 +1512,10 @@ class $TransactionTableTable extends TransactionTable
     } else if (isInserting) {
       context.missing(_accountIdMeta);
     }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
     return context;
   }
 
@@ -1516,9 +1529,8 @@ class $TransactionTableTable extends TransactionTable
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       amount: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}amount'])!,
-      transactionDate: $TransactionTableTable.$convertertransactionDate.fromSql(
-          attachedDatabase.typeMapping.read(
-              DriftSqlType.int, data['${effectivePrefix}transaction_date'])!),
+      transactionDate: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}transaction_date'])!,
       notes: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}notes']),
       transactionType: attachedDatabase.typeMapping.read(
@@ -1531,9 +1543,8 @@ class $TransactionTableTable extends TransactionTable
           .read(DriftSqlType.int, data['${effectivePrefix}beneficiary_id']),
       accountId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}account_id'])!,
-      createdAt: $TransactionTableTable.$convertercreatedAt.fromSql(
-          attachedDatabase.typeMapping
-              .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
     );
   }
 
@@ -1541,11 +1552,6 @@ class $TransactionTableTable extends TransactionTable
   $TransactionTableTable createAlias(String alias) {
     return $TransactionTableTable(attachedDatabase, alias);
   }
-
-  static TypeConverter<DateTime, int> $convertertransactionDate =
-      const DateTimeConverter();
-  static TypeConverter<DateTime, int> $convertercreatedAt =
-      const DateTimeConverter();
 }
 
 class TransactionTableData extends DataClass
@@ -1576,11 +1582,7 @@ class TransactionTableData extends DataClass
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['amount'] = Variable<double>(amount);
-    {
-      map['transaction_date'] = Variable<int>($TransactionTableTable
-          .$convertertransactionDate
-          .toSql(transactionDate));
-    }
+    map['transaction_date'] = Variable<DateTime>(transactionDate);
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
     }
@@ -1593,10 +1595,7 @@ class TransactionTableData extends DataClass
       map['beneficiary_id'] = Variable<int>(beneficiaryId);
     }
     map['account_id'] = Variable<int>(accountId);
-    {
-      map['created_at'] = Variable<int>(
-          $TransactionTableTable.$convertercreatedAt.toSql(createdAt));
-    }
+    map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
 
@@ -1788,14 +1787,14 @@ class TransactionTableCompanion extends UpdateCompanion<TransactionTableData> {
   static Insertable<TransactionTableData> custom({
     Expression<int>? id,
     Expression<double>? amount,
-    Expression<int>? transactionDate,
+    Expression<DateTime>? transactionDate,
     Expression<String>? notes,
     Expression<String>? transactionType,
     Expression<int>? categoryId,
     Expression<int>? contributorId,
     Expression<int>? beneficiaryId,
     Expression<int>? accountId,
-    Expression<int>? createdAt,
+    Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1846,9 +1845,7 @@ class TransactionTableCompanion extends UpdateCompanion<TransactionTableData> {
       map['amount'] = Variable<double>(amount.value);
     }
     if (transactionDate.present) {
-      map['transaction_date'] = Variable<int>($TransactionTableTable
-          .$convertertransactionDate
-          .toSql(transactionDate.value));
+      map['transaction_date'] = Variable<DateTime>(transactionDate.value);
     }
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
@@ -1869,8 +1866,7 @@ class TransactionTableCompanion extends UpdateCompanion<TransactionTableData> {
       map['account_id'] = Variable<int>(accountId.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<int>(
-          $TransactionTableTable.$convertercreatedAt.toSql(createdAt.value));
+      map['created_at'] = Variable<DateTime>(createdAt.value);
     }
     return map;
   }
@@ -3105,10 +3101,9 @@ class $$TransactionTableTableFilterComposer
   ColumnFilters<double> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnFilters(column));
 
-  ColumnWithTypeConverterFilters<DateTime, DateTime, int> get transactionDate =>
-      $composableBuilder(
-          column: $table.transactionDate,
-          builder: (column) => ColumnWithTypeConverterFilters(column));
+  ColumnFilters<DateTime> get transactionDate => $composableBuilder(
+      column: $table.transactionDate,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get notes => $composableBuilder(
       column: $table.notes, builder: (column) => ColumnFilters(column));
@@ -3117,10 +3112,8 @@ class $$TransactionTableTableFilterComposer
       column: $table.transactionType,
       builder: (column) => ColumnFilters(column));
 
-  ColumnWithTypeConverterFilters<DateTime, DateTime, int> get createdAt =>
-      $composableBuilder(
-          column: $table.createdAt,
-          builder: (column) => ColumnWithTypeConverterFilters(column));
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
 
   $$CategoryTableTableFilterComposer get categoryId {
     final $$CategoryTableTableFilterComposer composer = $composerBuilder(
@@ -3218,7 +3211,7 @@ class $$TransactionTableTableOrderingComposer
   ColumnOrderings<double> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get transactionDate => $composableBuilder(
+  ColumnOrderings<DateTime> get transactionDate => $composableBuilder(
       column: $table.transactionDate,
       builder: (column) => ColumnOrderings(column));
 
@@ -3229,7 +3222,7 @@ class $$TransactionTableTableOrderingComposer
       column: $table.transactionType,
       builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get createdAt => $composableBuilder(
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
   $$CategoryTableTableOrderingComposer get categoryId {
@@ -3328,9 +3321,8 @@ class $$TransactionTableTableAnnotationComposer
   GeneratedColumn<double> get amount =>
       $composableBuilder(column: $table.amount, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<DateTime, int> get transactionDate =>
-      $composableBuilder(
-          column: $table.transactionDate, builder: (column) => column);
+  GeneratedColumn<DateTime> get transactionDate => $composableBuilder(
+      column: $table.transactionDate, builder: (column) => column);
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
@@ -3338,7 +3330,7 @@ class $$TransactionTableTableAnnotationComposer
   GeneratedColumn<String> get transactionType => $composableBuilder(
       column: $table.transactionType, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<DateTime, int> get createdAt =>
+  GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   $$CategoryTableTableAnnotationComposer get categoryId {

@@ -3,7 +3,6 @@ import 'package:rexpense/data/local/database/tables/account_table.dart';
 import 'package:rexpense/data/local/database/tables/beneficiary_table.dart';
 import 'package:rexpense/data/local/database/tables/category_table.dart';
 import 'package:rexpense/data/local/database/tables/contributor_table.dart';
-import '../converters.dart';
 
 @TableIndex(name: 'idx_transactions_date', columns: {#transactionDate})
 @TableIndex(name: 'idx_transactions_category', columns: {#categoryId})
@@ -17,18 +16,15 @@ class TransactionTable extends Table {
 
   RealColumn get amount => real().withDefault(const Constant(0.0))();
 
-  IntColumn get transactionDate =>
-      integer().map(const DateTimeConverter())();
+  DateTimeColumn get transactionDate => dateTime()();
 
   TextColumn get notes => text().nullable()();
 
   TextColumn get transactionType => text().customConstraint(
-    'NOT NULL CHECK (transactionType IN ("income","expense"))',
-  )();
+        'NOT NULL CHECK (transactionType IN ("income","expense"))',
+      )();
 
-
-  IntColumn get categoryId =>
-      integer().references(CategoryTable, #id)();
+  IntColumn get categoryId => integer().references(CategoryTable, #id)();
 
   IntColumn get contributorId =>
       integer().nullable().references(ContributorTable, #id)();
@@ -36,10 +32,8 @@ class TransactionTable extends Table {
   IntColumn get beneficiaryId =>
       integer().nullable().references(BeneficiaryTable, #id)();
 
-  IntColumn get accountId =>
-      integer().references(AccountTable, #id)();
+  IntColumn get accountId => integer().references(AccountTable, #id)();
 
-  IntColumn get createdAt => integer()
-      .map(const DateTimeConverter())
-      .clientDefault(() => DateTime.now().millisecondsSinceEpoch)();
+  DateTimeColumn get createdAt =>
+      dateTime().clientDefault(() => DateTime.now())();
 }
