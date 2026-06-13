@@ -12,6 +12,11 @@ import 'package:rexpense/data/local/database/tables/transaction_table.dart';
 import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
 
 import 'converters.dart';
+import 'daos/account_dao.dart';
+import 'daos/beneficiary_dao.dart';
+import 'daos/category_dao.dart';
+import 'daos/contributor_dao.dart';
+import 'daos/transaction_dao.dart';
 
 part 'app_database.g.dart';
 
@@ -27,6 +32,13 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   int get schemaVersion => 1;
+
+  // DAOs
+  late final CategoryDao categoryDao = CategoryDao(this);
+  late final ContributorDao contributorDao = ContributorDao(this);
+  late final BeneficiaryDao beneficiaryDao = BeneficiaryDao(this);
+  late final AccountDao accountDao = AccountDao(this);
+  late final TransactionDao transactionDao = TransactionDao(this);
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
